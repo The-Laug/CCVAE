@@ -33,7 +33,6 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 image_size = train_dataset.data[0].shape
 image_size_flat = image_size[0] * image_size[1]
 
-
 model = VAE(
     input_dim=image_size_flat,
     hidden_dim=400,
@@ -41,21 +40,29 @@ model = VAE(
     likelihood="bernoulli"
 ).to(device)
 
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
-# Train the model
-for epoch in range(1, epochs + 1):
-    epoch_loss = train(epoch, model, train_loader, optimizer, device)
-    if epoch_loss is not None:
-        print(f"Epoch {epoch}, Average loss: {epoch_loss:.4f}")
-
-# Prompt the user for saving the model
-save_model = input("Do you want to save the trained model? (y/n): ")
-if save_model.lower() == 'y':
-    torch.save(model.state_dict(), "vae_mnist.pth")
-    print("Model saved as vae_mnist.pth")
+#Prompt user for saved model
+load_model = input("Do you want to load a saved model? (y/n): ")
+if load_model.lower() == 'y':
+    model.load_state_dict(torch.load("vae_mnist.pth"))
+    print("Model loaded from vae_mnist.pth")
 else:
-    print("Model not saved.")
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    print("Training a new model.")
+    # Train the model
+    for epoch in range(1, epochs + 1):
+        epoch_loss = train(epoch, model, train_loader, optimizer, device)
+        if epoch_loss is not None:
+            print(f"Epoch {epoch}, Average loss: {epoch_loss:.4f}")
+    # Prompt the user for saving the model
+    save_model = input("Do you want to save the trained model? (y/n): ")
+    if save_model.lower() == 'y':
+        torch.save(model.state_dict(), "vae_mnist.pth")
+        print("Model saved as vae_mnist.pth")
+    else:
+        print("Model not saved.")
+
+
+
 
 
 with torch.no_grad():
@@ -63,6 +70,7 @@ with torch.no_grad():
     sample, label = train_dataset[11] #random choice I made
 
     recon, mu, logvar = model(sample.view(-1, image_size_flat).to(device))
+
 
 fig, (ax1, ax2) = plt.subplots(ncols=2)
 
@@ -105,3 +113,22 @@ fig, (ax1, ax2) = plt.subplots(ncols=2)
 
 ax1.imshow(zero.squeeze(), cmap="gray")
 ax2.imshow(one.squeeze(), cmap="gray")
+
+
+fig, axes = plt.subplots(nrows=2, ncols=5, figsize=(15, 5))
+for img, ax in zip(sample_decoded, axes.ravel()):
+    ax.imshow(img.view(image_size).detach().cpu().squeeze(), cmap="gray")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+plt.show()
