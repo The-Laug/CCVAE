@@ -1,4 +1,5 @@
-from torch import nn
+import numpy
+from torch import nn, tensor
 import torch
 import torch.nn.functional as F
 
@@ -17,8 +18,10 @@ class VAE(nn.Module):
         self.linear_encode = nn.Linear(input_dim, hidden_dim)
         # Mean of latent space
         self.linear_mu = nn.Linear(hidden_dim, latent_dim)
-        # Log variance of latent space  
-        self.linear_logvar = nn.Linear(hidden_dim, latent_dim)  
+        # # Log variance of latent space  
+        self.linear_logvar = nn.Linear(hidden_dim, latent_dim) 
+        # Dirichlet alpha parameters 
+        self.linear_alpha = nn.Linear(hidden_dim, latent_dim)  
 
         # Decoder layers
         # first linear
@@ -37,6 +40,12 @@ class VAE(nn.Module):
     def encode(self, x):
             h = F.relu(self.linear_encode(x))
             return self.linear_mu(h), self.linear_logvar(h)
+        
+    #uses the same encoder structure to output dirichlet alphas
+    #Sends the input through the encoder and outputs the alpha parameters for the dirichlet distribution
+    def encode_dirichlet(self, x):
+            h = F.relu(self.linear_encode(x))
+            return self.linear_alpha(h)
 
 
     def decode(self, z):
@@ -52,14 +61,24 @@ class VAE(nn.Module):
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return mu + eps * std
+    
+    def dirichlet_sample(self, alpha):
+        """Sample from a Dirichlet distribution using the Gamma distribution."""
+        #ensuring only possitive alphas
+        alpha = F.softplus(alpha)
+        dirichlet_sample = torch.distributions.Dirichlet(alpha).rsample()
+        return dirichlet_sample
 
     def forward(self, x):
-        mu, logvar = self.encode(x) # get posterior parameters
-        z = self.sample(mu, logvar) # sample with reparametrization
+        alpha = self.encode_dirichlet(x) # get posterior parameters
+        # z = self.sample(mu, logvar) # sample with reparametrization
+        z = self.dirichlet_sample(alpha) # sample with reparametrization
         recon_x = self.decode(z) # get likelihood parameters
-        return recon_x, mu, logvar
-        
-def loss_function(recon_x, x, mu, logvar, likelihood="gaussian", beta=1.0):
+        return recon_x, alpha
+        # return recon_x, mu, logvar
+    
+
+def loss_function(recon_x, x, alpha, alpha0, likelihood="gaussian", beta=1.0):
     """Computes the VAE loss."""
     
     if likelihood == "gaussian":
@@ -69,7 +88,10 @@ def loss_function(recon_x, x, mu, logvar, likelihood="gaussian", beta=1.0):
     else:
         raise ValueError("Likelihood must be either 'gaussian' or 'bernoulli'")
     # KL divergence between the posterior and the prior (both Gaussian)
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    KLD = torch.distributions.kl_divergence(
+        torch.distributions.Dirichlet(F.softplus(alpha)),
+        torch.distributions.Dirichlet(F.softplus(alpha0))
+    ).sum()
 
     return recon_loss + beta * KLD
         
@@ -81,8 +103,9 @@ def train(epoch, model, train_loader, optimizer, device):
     for batch_idx, (data, _) in enumerate(train_loader):
         data = data.to(device).view(-1, model.input_dim)  # Flatten the data
         optimizer.zero_grad()
-        recon_batch, mu, logvar = model(data)
-        loss = loss_function(recon_batch, data, mu, logvar, likelihood=likelihood)
+        recon_batch, alpha = model(data)
+        prior_alpha = torch.ones_like(alpha).to(device)*0.5  # Prior Dirichlet parameters Assuming prior alpha0 = 1
+        loss = loss_function(recon_batch, data, alpha, prior_alpha, likelihood=likelihood)
         loss.backward()
         train_loss += loss.item()
         optimizer.step()

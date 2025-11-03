@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 #https://medium.com/@mikelgda/implementing-a-variational-autoencoder-in-pytorch-ddc0bb5ea1e7
 
 batch_size = 128
-epochs = 15
+epochs = 30
 learning_rate = 1e-3
 
 # Device configuration
@@ -67,9 +67,10 @@ else:
 
 with torch.no_grad():
 
-    sample, label = train_dataset[11] #random choice I made
+    sample, label = train_dataset[12] #random choice I made
 
-    recon, mu, logvar = model(sample.view(-1, image_size_flat).to(device))
+    # recon, mu, logvar = model(sample.view(-1, image_size_flat).to(device))
+    recon, alpha = model(sample.view(-1, image_size_flat).to(device))
 
 
 fig, (ax1, ax2) = plt.subplots(ncols=2)
@@ -77,10 +78,12 @@ fig, (ax1, ax2) = plt.subplots(ncols=2)
 ax1.imshow(sample.squeeze(), cmap="gray")
 ax1.set_title("Original")
 
-recon_sample = torch.bernoulli(recon.view(image_size).detach().cpu().squeeze())
+# recon_sample = torch.bernoulli(recon.view(image_size).detach().cpu().squeeze())
+recon_sample = torch._sample_dirichlet(recon.view(image_size).detach().cpu().squeeze())
 
 ax2.imshow(recon.view(image_size).detach().cpu().squeeze(), cmap="gray")
 ax2.set_title("Reconstructed")
+
 
 choice1, choice2 = np.random.choice(range(len(train_dataset)), 2)
 
@@ -89,9 +92,9 @@ one, _ = train_dataset[choice2]
 
 with torch.no_grad():
 
-    recon_zero, mu_zero, logvar_zero = model(zero.view(-1, image_size_flat).to(device))
-    recon_one, mu_one, logvar_one = model(one.view(-1, image_size_flat).to(device))
-    
+    recon_zero, alpha_zero = model(zero.view(-1, image_size_flat).to(device))
+    recon_one, alpha_one = model(one.view(-1, image_size_flat).to(device))
+
 def interpolate(mu1, mu2, n=10):
     """Interpolates between two points in latent space."""
     diff = mu2 - mu1
@@ -102,12 +105,11 @@ def interpolate(mu1, mu2, n=10):
         samples.append(sample)
     return torch.stack(samples)
 
-interpolated_mu = interpolate(mu_zero.detach(), mu_one.detach(), n=10)
-interpolated_logvar = interpolate(logvar_zero.detach(), logvar_one.detach(), n=10)
+interpolated_alpha = interpolate(alpha_zero.detach(), alpha_one.detach(), n=10)
 
 
-# sampled_latent = model.reparameterize(interpolated_mu, interpolated_logvar)
-# sample_decoded = model.decode(sampled_latent)
+sampled_latent = model.dirichlet_sample(interpolated_alpha)
+sample_decoded = model.decode(sampled_latent)
 
 fig, (ax1, ax2) = plt.subplots(ncols=2)
 
@@ -125,10 +127,7 @@ for img, ax in zip(sample_decoded, axes.ravel()):
     
     
     
-    
-    
-    
-    
+
     
     
 plt.show()
