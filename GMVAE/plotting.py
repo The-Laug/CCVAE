@@ -10,6 +10,10 @@ from sklearn.manifold import TSNE
 from torch import Tensor
 from torch.distributions import Normal
 from torchvision.utils import make_grid
+from torch.distributions import Normal, Dirichlet
+import torch.nn.functional as F
+
+
 
 
 def plot_autoencoder_stats(
@@ -104,23 +108,57 @@ def plot_samples(ax, x):
     ax.axis('off')
 
 
+
+
 def plot_interpolations(ax, vae):
     device = next(iter(vae.parameters())).device
     nrow = 10
     nsteps = 10
-    prior_params = vae.prior_params.expand(2 * nrow, *vae.prior_params.shape[-1:])
-    mu, log_sigma = prior_params.chunk(2, dim=-1)
-    pz = Normal(mu, log_sigma.exp())
-    z = pz.sample().view(nrow, 2, -1)
-    t = torch.linspace(0, 1, 10, device=device)
-    zs = t[None, :, None] * z[:, 0, None, :] + (1 - t[None, :, None]) * z[:, 1, None, :]
+
+    if hasattr(vae, "prior_params"):
+        # Gaussian latent space
+        prior_params = vae.prior_params.expand(2 * nrow, *vae.prior_params.shape[-1:])
+        mu, log_sigma = prior_params.chunk(2, dim=-1)
+        pz = Normal(mu, log_sigma.exp())
+        z = pz.sample().view(nrow, 2, -1)
+
+        # linear interpolation
+        t = torch.linspace(0, 1, nsteps, device=device)
+        zs = t[None, :, None] * z[:, 0, None, :] + (1 - t[None, :, None]) * z[:, 1, None, :]
+
+    elif hasattr(vae, "alpha_prior"):
+        # Dirichlet latent space
+        alpha = vae.alpha_prior.expand(2 * nrow, -1)
+        pz = Dirichlet(alpha)
+        z = pz.sample().view(nrow, 2, -1)
+
+        # approximate interpolation in simplex
+        t = torch.linspace(0, 1, nsteps, device=device)
+        zs = t[None, :, None] * z[:, 0, None, :] + (1 - t[None, :, None]) * z[:, 1, None, :]
+        zs = zs / zs.sum(dim=-1, keepdim=True)  # project back to simplex
+
+    elif hasattr(vae, "logits_prior"):
+        # Continuous Categorical (Gumbel-Softmax)
+        logits = vae.logits_prior.expand(2 * nrow, -1)
+        # Use Gumbel-Softmax reparameterization
+        z = F.gumbel_softmax(logits, tau=1.0, hard=False, dim=-1).view(nrow, 2, -1)
+
+        # interpolate probabilities in simplex space
+        t = torch.linspace(0, 1, nsteps, device=device)
+        zs = t[None, :, None] * z[:, 0, None, :] + (1 - t[None, :, None]) * z[:, 1, None, :]
+        zs = zs / zs.sum(dim=-1, keepdim=True)
+
+    else:
+        raise ValueError("VAE has no recognized latent prior parameters.")
+
+    # Decode interpolated latent points
     px = vae.observation_model(zs.view(nrow * nsteps, -1))
-    x = px.sample()
-    x = x.to('cpu')
+    x = px.sample().to('cpu')
+
+    # Visualize grid
     x_grid = make_grid(x.view(-1, 1, 28, 28), nrow=nrow).permute(1, 2, 0)
     ax.imshow(x_grid)
     ax.axis('off')
-
 
 def plot_grid(ax, vae):
     device = next(iter(vae.parameters())).device
@@ -172,6 +210,7 @@ def plot_latents(ax, z, y):
     colors = [palette[l] for l in y]
     z = TSNE(n_components=2).fit_transform(z)
     ax.scatter(z[:, 0], z[:, 1], color=colors)
+
 
 
 def make_vae_plots(vae, x, y, outputs, training_data, validation_data, tmp_img="tmp_vae_out.png", figsize=(18, 18)):
