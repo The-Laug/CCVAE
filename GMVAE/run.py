@@ -1,9 +1,11 @@
+from sklearn.base import defaultdict
 import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 from torch import optim
 from model import VAE, loss_function, train
 import numpy as np
+from plotting import make_vae_plots
 
 
 import matplotlib.pyplot as plt
@@ -65,69 +67,70 @@ else:
 
 
 
-with torch.no_grad():
-
-    sample, label = train_dataset[12] #random choice I made
-
-    # recon, mu, logvar = model(sample.view(-1, image_size_flat).to(device))
-    recon, alpha = model(sample.view(-1, image_size_flat).to(device))
 
 
-fig, (ax1, ax2) = plt.subplots(ncols=2)
 
-ax1.imshow(sample.squeeze(), cmap="gray")
-ax1.set_title("Original")
+def plots():
+    with torch.no_grad():
 
-# recon_sample = torch.bernoulli(recon.view(image_size).detach().cpu().squeeze())
-recon_sample = torch._sample_dirichlet(recon.view(image_size).detach().cpu().squeeze())
+        sample, label = train_dataset[12] #random choice I made
 
-ax2.imshow(recon.view(image_size).detach().cpu().squeeze(), cmap="gray")
-ax2.set_title("Reconstructed")
+        # recon, mu, logvar = model(sample.view(-1, image_size_flat).to(device))
+        recon, alpha = model(sample.view(-1, image_size_flat).to(device))
 
 
-choice1, choice2 = np.random.choice(range(len(train_dataset)), 2)
+    fig, (ax1, ax2) = plt.subplots(ncols=2)
 
-zero,_ = train_dataset[choice1]
-one, _ = train_dataset[choice2]
+    ax1.imshow(sample.squeeze(), cmap="gray")
+    ax1.set_title("Original")
 
-with torch.no_grad():
+    # recon_sample = torch.bernoulli(recon.view(image_size).detach().cpu().squeeze())
+    recon_sample = torch._sample_dirichlet(recon.view(image_size).detach().cpu().squeeze())
 
-    recon_zero, alpha_zero = model(zero.view(-1, image_size_flat).to(device))
-    recon_one, alpha_one = model(one.view(-1, image_size_flat).to(device))
-
-def interpolate(mu1, mu2, n=10):
-    """Interpolates between two points in latent space."""
-    diff = mu2 - mu1
-    step = diff / n
-    samples = []
-    for i in range(n):
-        sample = mu1 + i * step
-        samples.append(sample)
-    return torch.stack(samples)
-
-interpolated_alpha = interpolate(alpha_zero.detach(), alpha_one.detach(), n=10)
+    ax2.imshow(recon.view(image_size).detach().cpu().squeeze(), cmap="gray")
+    ax2.set_title("Reconstructed")
 
 
-sampled_latent = model.dirichlet_sample(interpolated_alpha)
-sample_decoded = model.decode(sampled_latent)
+    choice1, choice2 = np.random.choice(range(len(train_dataset)), 2)
 
-fig, (ax1, ax2) = plt.subplots(ncols=2)
+    zero,_ = train_dataset[choice1]
+    one, _ = train_dataset[choice2]
 
-ax1.imshow(zero.squeeze(), cmap="gray")
-ax2.imshow(one.squeeze(), cmap="gray")
+    with torch.no_grad():
+
+        recon_zero, alpha_zero = model(zero.view(-1, image_size_flat).to(device))
+        recon_one, alpha_one = model(one.view(-1, image_size_flat).to(device))
+
+    def interpolate(mu1, mu2, n=10):
+        """Interpolates between two points in latent space."""
+        diff = mu2 - mu1
+        step = diff / n
+        samples = []
+        for i in range(n):
+            sample = mu1 + i * step
+            samples.append(sample)
+        return torch.stack(samples)
+
+    interpolated_alpha = interpolate(alpha_zero.detach(), alpha_one.detach(), n=10)
 
 
-fig, axes = plt.subplots(nrows=2, ncols=5, figsize=(15, 5))
-for img, ax in zip(sample_decoded, axes.ravel()):
-    ax.imshow(img.view(image_size).detach().cpu().squeeze(), cmap="gray")
-    ax.set_xticks([])
-    ax.set_yticks([])
+    sampled_latent = model.dirichlet_sample(interpolated_alpha)
+    sample_decoded = model.decode(sampled_latent)
+
+    fig, (ax1, ax2) = plt.subplots(ncols=2)
+
+    ax1.imshow(zero.squeeze(), cmap="gray")
+    ax2.imshow(one.squeeze(), cmap="gray")
+
+
+    fig, axes = plt.subplots(nrows=2, ncols=5, figsize=(15, 5))
+    for img, ax in zip(sample_decoded, axes.ravel()):
+        ax.imshow(img.view(image_size).detach().cpu().squeeze(), cmap="gray")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        
+    plt.show()
     
     
     
-    
-    
 
-    
-    
-plt.show()
