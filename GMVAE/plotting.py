@@ -13,9 +13,6 @@ from torchvision.utils import make_grid
 from torch.distributions import Normal, Dirichlet
 import torch.nn.functional as F
 
-
-
-
 def plot_autoencoder_stats(
         x: Tensor = None,
         x_hat: Tensor = None,
@@ -25,8 +22,7 @@ def plot_autoencoder_stats(
         train_loss: List = None,
         valid_loss: List = None,
         classes: List = None,
-        dimensionality_reduction_op: Optional[Callable] = None,
-) -> None:
+        dimensionality_reduction_op: Optional[Callable] = None,) -> None:
     """
     An utility 
     """
@@ -173,7 +169,6 @@ def plot_grid(ax, vae):
     ax.imshow(x_grid)
     ax.axis('off')
 
-
 def plot_2d_latents(ax, qz, z, y):
     z = z.to('cpu')
     y = y.to('cpu')
@@ -182,26 +177,36 @@ def plot_2d_latents(ax, qz, z, y):
     palette = sns.color_palette()
     colors = [palette[l] for l in y]
 
-    # plot prior
+    # plot prior area (for Gaussian case)
     prior = plt.Circle((0, 0), scale_factor, color='gray', fill=True, alpha=0.1)
     ax.add_artist(prior)
+    
+    # check if qz has Gaussian parameters
+    if hasattr(qz, "mu") and hasattr(qz, "sigma"):
+        mus, sigmas = qz.mu.to('cpu'), qz.sigma.to('cpu')
+        mus = [mus[i].numpy().tolist() for i in range(batch_size)]
+        sigmas = [sigmas[i].numpy().tolist() for i in range(batch_size)]
 
-    # plot data points
-    mus, sigmas = qz.mu.to('cpu'), qz.sigma.to('cpu')
-    mus = [mus[i].numpy().tolist() for i in range(batch_size)]
-    sigmas = [sigmas[i].numpy().tolist() for i in range(batch_size)]
+        posteriors = [
+            plt.matplotlib.patches.Ellipse(
+                mus[i],
+                *(scale_factor * s for s in sigmas[i]),
+                color=colors[i],
+                fill=False,
+                alpha=0.3
+            )
+            for i in range(batch_size)
+        ]
+        for p in posteriors:
+            ax.add_artist(p)
 
-    posteriors = [
-        plt.matplotlib.patches.Ellipse(mus[i], *(scale_factor * s for s in sigmas[i]), color=colors[i], fill=False,
-                                       alpha=0.3) for i in range(batch_size)]
-    for p in posteriors:
-        ax.add_artist(p)
-
+    # if not Gaussian, skip ellipses and plot points only
     ax.scatter(z[:, 0], z[:, 1], color=colors)
 
     ax.set_xlim([-3, 3])
     ax.set_ylim([-3, 3])
     ax.set_aspect('equal', 'box')
+
 
 
 def plot_latents(ax, z, y):
