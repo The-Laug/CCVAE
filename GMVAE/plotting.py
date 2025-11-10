@@ -12,6 +12,7 @@ from torch.distributions import Normal
 from torchvision.utils import make_grid
 from torch.distributions import Normal, Dirichlet
 import torch.nn.functional as F
+from matplotlib import animation
 
 def plot_autoencoder_stats(
         x: Tensor = None,
@@ -294,3 +295,37 @@ def make_vae_plots(vae, x, y, outputs, training_data, validation_data, tmp_img="
     clear_output(wait=True)
 
     os.remove(tmp_img)
+
+
+def latent_morphing(vae):
+
+
+    s1 = vae.sample_from_prior(batch_size=1)
+    s2 = vae.sample_from_prior(batch_size=1)
+
+    z1 = s1["z"].reshape(-1)
+    z2 = s2["z"].reshape(-1)
+
+    fps = 30
+    frames = fps * 4
+
+    def interpolate(z1, z2, t):
+        return (1 - t) * z1 + t * z2
+
+    fig, ax = plt.subplots()
+    img = ax.imshow(np.zeros((28, 28)), cmap="gray", vmin=0, vmax=1)
+    ax.axis("off")
+
+    def update(frame_idx):
+        t = frame_idx / (frames - 1)
+        z_t = interpolate(z1, z2, t)
+        x_t = vae.observation_model(z_t.reshape(1, -1)).sample().to('cpu')
+        x_img = np.array(x_t).reshape(28, 28)
+        img.set_data(x_img)
+        return [img]
+
+    anim = animation.FuncAnimation(fig, update, frames=frames, interval=1000/fps, blit=True)
+    writergif = animation.PillowWriter(fps=fps)
+    anim.save('morphing.gif',writer=writergif)
+
+    plt.show()
