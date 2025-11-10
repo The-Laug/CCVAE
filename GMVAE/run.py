@@ -67,9 +67,6 @@ else:
 
 
 
-
-
-
 def plots():
     with torch.no_grad():
 
@@ -133,4 +130,3 @@ def plots():
     
     
     
-
