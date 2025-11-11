@@ -9,9 +9,33 @@ def inv_cdf_torch(u, l):
     x = num / den
     return torch.where(near_half, u, x)
 
+# def sample_cc_reparam_torch(lam):
+#     lam = lam / (lam.sum() + 1e-8)  # normalize for stability
+#     K = lam.size(0)
+#     lam_K = lam[-1]
+#     lam_rest = lam[:-1]
+#     accepted = False
+#     max_attempts = 100
+#     attempts = 0
+#     x = None
 
+#     while not accepted and attempts < max_attempts:
+#         attempts += 1
+#         u = torch.rand(K - 1, device=lam.device, dtype=lam.dtype)
+#         ratio = lam_rest / (lam_rest + lam_K + 1e-8)
+#         ratio = ratio.clamp(1e-6, 1 - 1e-6)
+#         x = inv_cdf_torch(u, ratio)
+#         if torch.isnan(x).any() or torch.isinf(x).any():
+#             continue
+#         if x.sum() <= 1.0:
+#             accepted = True
 
+#     if x is None:
+#         # fallback to uniform
+#         x = torch.ones(K - 1, device=lam.device, dtype=lam.dtype) / (K - 1)
 
+#     x_full = torch.cat([x, 1 - x.sum().unsqueeze(0)], dim=0)
+#     return x_full
 
 def sample_cc_reparam_torch(lam):
     """
@@ -25,7 +49,7 @@ def sample_cc_reparam_torch(lam):
     lam_rest = lam[:-1]
 
     accepted = False
-    max_attempts = 1e5
+    max_attempts = 100
     attempts = 0
 
     while not accepted and attempts < max_attempts:
@@ -51,7 +75,6 @@ def sample_cc_reparam_batch_torch(lam_batch):
     for lam in lam_batch:
         samples.append(sample_cc_reparam_torch(lam))
     return torch.stack(samples)
-
 
 
 def sample_cc_ordered_simple_torch(lam):
