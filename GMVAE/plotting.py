@@ -210,11 +210,11 @@ def plot_2d_latents(ax, qz, z, y):
 
 
 
-def plot_latents(ax, z, y):
+def plot_latents(ax, z, y, latent_features):
     z = z.to('cpu')
     palette = sns.color_palette()
     colors = [palette[l] for l in y]
-    z = TSNE(n_components=2).fit_transform(z)
+    z = TSNE(n_components=latent_features, method='barnes_hut' if latent_features < 4 else 'exact').fit_transform(z)
     ax.scatter(z[:, 0], z[:, 1], color=colors)
 
 
@@ -235,7 +235,7 @@ def make_vae_plots(vae, x, y, outputs, training_data, validation_data, tmp_img="
             plot_2d_latents(axes[0, 1], qz, z, y)
         else:
             axes[0, 1].set_title(r'Latent Samples $\mathbf{z} \sim q_\phi(\mathbf{z} | \mathbf{x})$ (t-SNE)')
-            plot_latents(axes[0, 1], z, y)
+            plot_latents(axes[0, 1], z, y, vae.latent_features)
     except Exception as e:
         print(f"Could not generate the plot of the latent sanples because of exception")
         print(e)
