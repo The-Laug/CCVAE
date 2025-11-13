@@ -31,7 +31,6 @@
 
 import torch
 from torch.distributions import Distribution
-import tensorflow as tf
 import numpy as np
 from distributions.cc.cc_torch import sample_cc_ordered_torch, cc_log_prob_torch, sample_cc_reparam_batch_torch
 # from cc.cc_torch import sample_cc_ordered_torch, cc_log_prob_torch, sample_cc_reparam_batch_torch

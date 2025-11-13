@@ -2,6 +2,7 @@ import torch
 from torch import nn, Tensor
 import numpy as np
 from torch.distributions import Distribution, Bernoulli
+import torch.nn.functional as F
 
 from utils import LatentType
 from distributions.reparameterized_diagonal_gaussian import ReparameterizedDiagonalGaussian
@@ -9,9 +10,9 @@ from distributions.reparameterized_dirichlet import ReparameterizedDirichlet
 from distributions.reparameterized_continuous_categorical import ReparameterizedContinuousCategorical
 
 
-class ConvolutionalVariationalAutoencoder(nn.Module):
+class VariationalAutoencoder(nn.Module):
     def __init__(self, input_shape: torch.Size, latent_features: int, latent_type: LatentType, tau_start:float = 2.0) -> None:
-        super(ConvolutionalVariationalAutoencoder, self).__init__()
+        super(VariationalAutoencoder, self).__init__()
         
         self.latent_type = latent_type
         self.input_shape = input_shape
