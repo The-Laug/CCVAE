@@ -6,7 +6,7 @@ import numpy as np
 import seaborn as sns
 import torch
 from IPython.display import Image, display, clear_output
-from sklearn.manifold import TSNE
+from sklearn.manifold import TSNE, MDS
 from torch import Tensor
 from torch.distributions import Normal
 from torchvision.utils import make_grid
@@ -214,6 +214,7 @@ def plot_latents(ax, z, y, latent_features):
     z = z.to('cpu')
     palette = sns.color_palette()
     colors = [palette[l] for l in y]
+    # possibly look into n_jobs for speed-up
     z = TSNE(n_components=latent_features, method='barnes_hut' if latent_features < 4 else 'exact').fit_transform(z)
     ax.scatter(z[:, 0], z[:, 1], color=colors)
 
@@ -295,6 +296,20 @@ def make_vae_plots(vae, x, y, outputs, training_data, validation_data, tmp_img="
     clear_output(wait=True)
 
     os.remove(tmp_img)
+
+
+# def plot_mds(vae):
+def plot_mds(ax, z, y, latent_features):
+    z = z.to('cpu')
+    palette = sns.color_palette()
+    colors = [palette[l] for l in y]
+    z = MDS(
+        n_components=latent_features,
+        max_iter=3000,
+
+    ).fit_transform(z)
+
+    ax.scatter(z[:, 0], z[:, 1], color=colors)
 
 
 def latent_morphing(vae):
