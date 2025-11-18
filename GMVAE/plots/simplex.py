@@ -15,10 +15,7 @@ def plot_mnist_simplex(latent_matrix, labels,
 
     latent_matrix: numpy array (n_samples, latent_dim), latent codes (sum to 1)
     labels: list or array of digit labels
-    image_folder: folder containing corresponding MNIST images (indexed numerically)
     """
-
-    assert latent_dim == 3, "Simplex plot works only for 3D Dirichlet latent spaces."
 
     # 1. Setup figure and simplex geometry
     fig, ax = plt.subplots(figsize=fig_size)
