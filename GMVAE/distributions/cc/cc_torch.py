@@ -142,3 +142,19 @@ def cc_log_prob_torch(sample: torch.Tensor, eta: torch.Tensor):
     loglik = -torch.sum(sample * torch.nn.functional.log_softmax(aug_eta, dim=1), dim=1)
     log_norm_const = cc_log_norm_const_torch(eta)
     return loglik + log_norm_const
+
+def lambda_to_eta(lam):
+    # lam: (batch, K)
+    # return eta: (batch, K-1)
+    last = lam[:, -1].unsqueeze(1)
+    eta = torch.log(lam / last)
+    return eta[:, :-1]
+
+
+def eta_to_lambda(eta):
+    # eta: (batch, K-1)
+    batch = eta.size(0)
+    zeros = torch.zeros(batch, 1, device=eta.device, dtype=eta.dtype)
+    aug_eta = torch.cat([eta, zeros], dim=1)
+    lam = torch.softmax(aug_eta, dim=1)
+    return lam
