@@ -3,8 +3,12 @@ import matplotlib.pyplot as plt
 import itertools
 # Utility: create vertices of an n-simplex polygon for visualization
 
-def get_polygon_vertices(n_archetypes, radius=1.0):
-    angles = np.linspace(0, 2 * np.pi, n_archetypes, endpoint=False)
+def get_polygon_vertices(latent_dim, radius=1.0):
+    if latent_dim == 3:
+        angles = np.linspace(0, 2 * np.pi, latent_dim, endpoint=False)+np.pi/2
+    else:
+        angles = np.linspace(0, 2 * np.pi, latent_dim, endpoint=False)
+        
     return np.stack([radius * np.cos(angles), radius * np.sin(angles)], axis=1)
 
 # === Simplified MNIST simplex plot ===
@@ -23,11 +27,10 @@ def plot_mnist_simplex(latent_matrix, labels,
         ax.set_aspect('equal')
         ax.axis('off')
 
-    n_archetypes = latent_dim
-    vertices = get_polygon_vertices(n_archetypes, radius=1.0)
+    vertices = get_polygon_vertices(latent_dim, radius=1.0)
 
     # 2. Draw edges (triangle)
-    for i, j in itertools.combinations(range(n_archetypes), 2):
+    for i, j in itertools.combinations(range(latent_dim), 2):
         ax.plot([vertices[i, 0], vertices[j, 0]],
                 [vertices[i, 1], vertices[j, 1]],
                 'k--', alpha=0.4, lw=1)
@@ -42,14 +45,6 @@ def plot_mnist_simplex(latent_matrix, labels,
         ax.scatter(projected[idxs, 0], projected[idxs, 1],
                    s=10, alpha=0.6, color=cmap(digit % 10), label=str(digit))
         
-    # 6. Optional: midpoint images between archetypes
-    midpoint_coords = []
-    for i, j in itertools.combinations(range(n_archetypes), 2):
-        midpoint = (vertices[i] + vertices[j]) / 2
-        midpoint_coords.append(midpoint)
-    for midpoint in midpoint_coords:
-        circ = plt.Circle(midpoint, 0.02, color='gray', fill=True, alpha=0.4)
-        ax.add_artist(circ)
 
     ax.legend(title="Digits", bbox_to_anchor=(1.05, 1), loc='upper left')
     if should_show:
