@@ -9,18 +9,19 @@ def get_polygon_vertices(n_archetypes, radius=1.0):
 
 # === Simplified MNIST simplex plot ===
 def plot_mnist_simplex(latent_matrix, labels,
-                       latent_dim=3, fig_size=(8, 8)):
+                       latent_dim=3, fig_size=(8, 8), ax=None):
     """
     Visualizes the MNIST latent simplex learned by a Dirichlet/CC model.
 
     latent_matrix: numpy array (n_samples, latent_dim), latent codes (sum to 1)
     labels: list or array of digit labels
     """
-
+    should_show = ax == None
     # 1. Setup figure and simplex geometry
-    fig, ax = plt.subplots(figsize=fig_size)
-    ax.set_aspect('equal')
-    ax.axis('off')
+    if should_show:
+        fig, ax = plt.subplots(figsize=fig_size)
+        ax.set_aspect('equal')
+        ax.axis('off')
 
     n_archetypes = latent_dim
     vertices = get_polygon_vertices(n_archetypes, radius=1.0)
@@ -51,6 +52,7 @@ def plot_mnist_simplex(latent_matrix, labels,
         ax.add_artist(circ)
 
     ax.legend(title="Digits", bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.tight_layout()
-    plt.show()
+    if should_show:
+        plt.tight_layout()
+        plt.show()
 

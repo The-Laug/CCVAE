@@ -298,6 +298,16 @@ def make_vae_plots(vae, x, y, outputs, training_data, validation_data, tmp_img="
     os.remove(tmp_img)
 
 
+def plot_latent_dim_wise_reconstruct(ax, vae, latent_features, device):
+    one_hot_z = torch.zeros((latent_features, latent_features)).to(device)
+    for i in range(latent_features):
+        one_hot_z[i][i] = 1
+
+    x = vae.decoder(one_hot_z).cpu()
+    x_grid = make_grid(x.view(-1, 1, 28, 28), nrow=latent_features, pad_value=1).permute(1, 2, 0)
+    ax.imshow(x_grid)
+    ax.axis('off')
+
 # def plot_mds(vae):
 def plot_mds(ax, z, y, latent_features):
     z = z.to('cpu')
@@ -334,7 +344,7 @@ def latent_morphing(vae):
     def update(frame_idx):
         t = frame_idx / (frames - 1)
         z_t = interpolate(z1, z2, t)
-        x_t = vae.observation_model(z_t.reshape(1, -1)).sample().to('cpu')
+        x_t = vae.observation_model(z_t.reshape(1, -1)).mean.cpu().squeeze().detach()
         x_img = np.array(x_t).reshape(28, 28)
         img.set_data(x_img)
         return [img]
