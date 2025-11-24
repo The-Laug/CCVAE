@@ -98,8 +98,11 @@ def plot_autoencoder_stats(
 
 
 def plot_samples(ax, x):
-    x = x.to('cpu')
-    nrow = int(np.sqrt(x.size(0)))
+    if type(x) == list:
+        nrow = int(np.sqrt(len(x)))
+    else:
+        x = x.to('cpu')
+        nrow = int(np.sqrt(x.size(0)))
     x_grid = make_grid(x.view(-1, 1, 28, 28), nrow=nrow).permute(1, 2, 0)
     ax.imshow(x_grid)
     ax.axis('off')
@@ -218,6 +221,33 @@ def plot_latents(ax, z, y, latent_features):
     z = TSNE(n_components=latent_features, method='barnes_hut' if latent_features < 4 else 'exact').fit_transform(z)
     ax.scatter(z[:, 0], z[:, 1], color=colors)
 
+
+def make_new_vae_plots(vae, loss_data, recon_data, kl_data, x):
+    fig, axes = plt.subplots(1, 4, figsize=(16, 4), squeeze=False)
+    axes[0, 0].set_title(r'Negative ELBO')
+    axes[0, 0].plot(loss_data)
+    # axes[0, 0].tick_params("y", rotation=30)
+
+    axes[0, 1].set_title(r'Reconstruction Loss')
+    axes[0, 1].plot(recon_data)
+    # axes[0, 1].tick_params("y", rotation=30)
+
+    axes[0, 2].set_title(r'KI')
+    axes[0, 2].plot(kl_data)
+    # axes[0, 2].tick_params("y", rotation=30)
+
+
+    axes[0, 3].set_title(r'Random reconstructions')
+    plot_samples(axes[0, 3], x)
+
+    tmp_img = "tmp_vae_out.png"
+    plt.tight_layout()
+    plt.savefig(tmp_img)
+    plt.close(fig)
+    display(Image(filename=tmp_img))
+    clear_output(wait=True)
+
+    os.remove(tmp_img)
 
 
 def make_vae_plots(vae, x, y, outputs, training_data, validation_data, tmp_img="tmp_vae_out.png", figsize=(18, 18)):
