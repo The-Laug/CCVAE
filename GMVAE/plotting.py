@@ -222,7 +222,7 @@ def plot_latents(ax, z, y, latent_features):
     ax.scatter(z[:, 0], z[:, 1], color=colors)
 
 
-def make_new_vae_plots(vae, loss_data, recon_data, kl_data, x):
+def make_new_vae_plots(vae, loss_data, recon_data, kl_data, x, save_name=None, overwrite=True):
     fig, axes = plt.subplots(1, 4, figsize=(16, 4), squeeze=False)
     axes[0, 0].set_title(r'Negative ELBO')
     axes[0, 0].plot(loss_data)
@@ -236,19 +236,39 @@ def make_new_vae_plots(vae, loss_data, recon_data, kl_data, x):
     axes[0, 2].plot(kl_data)
     # axes[0, 2].tick_params("y", rotation=30)
 
-
     axes[0, 3].set_title(r'Random reconstructions')
     plot_samples(axes[0, 3], x)
 
-    tmp_img = "tmp_vae_out.png"
+    tmp_img = "tmp_vae_out.png" if save_name == None else save_name
     plt.tight_layout()
     plt.savefig(tmp_img)
     plt.close(fig)
     display(Image(filename=tmp_img))
-    clear_output(wait=True)
+    if overwrite:
+        clear_output(wait=True)
+    if save_name == None:
+        os.remove(tmp_img)
 
-    os.remove(tmp_img)
 
+def compare_performance_plots(loss_data_arr, recon_data_arr, kl_data_arr, names, base_path):
+    fig, axes = plt.subplots(1, 3, figsize=(12, 4), squeeze=False)
+    axes[0, 0].set_title(r'Negative ELBO')
+    for loss_data, name in zip(loss_data_arr, names):
+        axes[0, 0].plot(loss_data, label=name)
+    axes[0, 0].legend()
+
+    axes[0, 1].set_title(r'Reconstruction Loss')
+    for recon_data, name in zip(recon_data_arr, names):
+        axes[0, 1].plot(recon_data, label=name)
+    axes[0, 1].legend()
+
+    axes[0, 2].set_title(r'KI')
+    for kl_data, name in zip(kl_data_arr, names):
+        axes[0, 2].plot(kl_data, label=name)
+    axes[0, 2].legend()
+
+    plt.savefig(f"{base_path}/comparison.png")
+    plt.show()
 
 def make_vae_plots(vae, x, y, outputs, training_data, validation_data, tmp_img="tmp_vae_out.png", figsize=(18, 18)):
     fig, axes = plt.subplots(3, 3, figsize=figsize, squeeze=False)

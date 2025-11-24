@@ -1,24 +1,32 @@
 import csv
-from plots import compare_performance_plot
+from plotting import compare_performance_plots
 
-def save_performance(name: str, loss_data: list, recon_data: list, ki_data: list):
-    with open('name.csv', 'w') as f:
-        w = csv.writer(delimiter=',')
-        w.writerow(["loss", "recon", "ki"])
+def save_performance(name: str, loss_data: list, recon_data: list, kl_data: list):
+    with open(f'{name}.csv', 'w', newline='') as f:
+        w = csv.writer(f, delimiter=';')
         for i in range(len(loss_data)):
-            w.writerow(loss_data[i], recon_data[i], ki_data[i])
+            w.writerow([loss_data[i], recon_data[i], kl_data[i]])
 
-def load_performance(name: str) -> list, list, list:
-    with open(f'{name}.csv', 'r'):
-        r = csv.reader(delimiter=',')
+def load_performance(path: str):
+    loss_data, recon_data, kl_data = [], [], []
+    with open(f'{path}/performance.csv', 'r') as f:
+        r = csv.reader(f, delimiter=';')
         for row in r:
-            print(', '.join(row))
-
-def create_comparison(names: list[str]):
-    data = []
-    for name in names:
-        data.append((name, load_performance(name)))
+            loss_data.append(float(row[0]))
+            recon_data.append(float(row[1]))
+            kl_data.append(float(row[2]))
     
-    # create plots
-    compare_performance_plot(data)
-    ...
+    return loss_data, recon_data, kl_data
+
+def create_comparison(base_path, names: list[str]):
+    loss_data_arr, recon_data_arr, kl_data_arr = [], [], []
+    for name in names:
+        data = load_performance(f'{base_path}/{name}')
+        loss_data_arr.append(data[0])
+        recon_data_arr.append(data[1])
+        kl_data_arr.append(data[2])
+    compare_performance_plots(loss_data_arr, recon_data_arr, kl_data_arr, names, base_path)
+
+if __name__ == "__main__":
+    base_path = 'GMVAE/saves/CCVAE'
+    create_comparison(base_path, ['c-free-5', 'c-free-10'])
