@@ -6,7 +6,7 @@ import numpy as np
 import seaborn as sns
 import torch
 from IPython.display import Image, display, clear_output
-from sklearn.manifold import TSNE
+from sklearn.manifold import TSNE, MDS
 from torch import Tensor
 from torch.distributions import Normal
 from torchvision.utils import make_grid
@@ -98,8 +98,11 @@ def plot_autoencoder_stats(
 
 
 def plot_samples(ax, x):
-    x = x.to('cpu')
-    nrow = int(np.sqrt(x.size(0)))
+    if type(x) == list:
+        nrow = int(np.sqrt(len(x)))
+    else:
+        x = x.to('cpu')
+        nrow = int(np.sqrt(x.size(0)))
     x_grid = make_grid(x.view(-1, 1, 28, 28), nrow=nrow).permute(1, 2, 0)
     ax.imshow(x_grid)
     ax.axis('off')
@@ -214,9 +217,37 @@ def plot_latents(ax, z, y, latent_features):
     z = z.to('cpu')
     palette = sns.color_palette()
     colors = [palette[l] for l in y]
+    # possibly look into n_jobs for speed-up
     z = TSNE(n_components=latent_features, method='barnes_hut' if latent_features < 4 else 'exact').fit_transform(z)
     ax.scatter(z[:, 0], z[:, 1], color=colors)
 
+
+def make_new_vae_plots(vae, loss_data, recon_data, kl_data, x):
+    fig, axes = plt.subplots(1, 4, figsize=(16, 4), squeeze=False)
+    axes[0, 0].set_title(r'Negative ELBO')
+    axes[0, 0].plot(loss_data)
+    # axes[0, 0].tick_params("y", rotation=30)
+
+    axes[0, 1].set_title(r'Reconstruction Loss')
+    axes[0, 1].plot(recon_data)
+    # axes[0, 1].tick_params("y", rotation=30)
+
+    axes[0, 2].set_title(r'KI')
+    axes[0, 2].plot(kl_data)
+    # axes[0, 2].tick_params("y", rotation=30)
+
+
+    axes[0, 3].set_title(r'Random reconstructions')
+    plot_samples(axes[0, 3], x)
+
+    tmp_img = "tmp_vae_out.png"
+    plt.tight_layout()
+    plt.savefig(tmp_img)
+    plt.close(fig)
+    display(Image(filename=tmp_img))
+    clear_output(wait=True)
+
+    os.remove(tmp_img)
 
 
 def make_vae_plots(vae, x, y, outputs, training_data, validation_data, tmp_img="tmp_vae_out.png", figsize=(18, 18)):
@@ -297,6 +328,30 @@ def make_vae_plots(vae, x, y, outputs, training_data, validation_data, tmp_img="
     os.remove(tmp_img)
 
 
+def plot_latent_dim_wise_reconstruct(ax, vae, latent_features, device):
+    one_hot_z = torch.zeros((latent_features, latent_features)).to(device)
+    for i in range(latent_features):
+        one_hot_z[i][i] = 1
+
+    x = vae.decoder(one_hot_z).cpu()
+    x_grid = make_grid(x.view(-1, 1, 28, 28), nrow=latent_features, pad_value=1).permute(1, 2, 0)
+    ax.imshow(x_grid)
+    ax.axis('off')
+
+# def plot_mds(vae):
+def plot_mds(ax, z, y, latent_features):
+    z = z.to('cpu')
+    palette = sns.color_palette()
+    colors = [palette[l] for l in y]
+    z = MDS(
+        n_components=latent_features,
+        max_iter=3000,
+
+    ).fit_transform(z)
+
+    ax.scatter(z[:, 0], z[:, 1], color=colors)
+
+
 def latent_morphing(vae):
 
 
@@ -319,7 +374,7 @@ def latent_morphing(vae):
     def update(frame_idx):
         t = frame_idx / (frames - 1)
         z_t = interpolate(z1, z2, t)
-        x_t = vae.observation_model(z_t.reshape(1, -1)).sample().to('cpu')
+        x_t = vae.observation_model(z_t.reshape(1, -1)).mean.cpu().squeeze().detach()
         x_img = np.array(x_t).reshape(28, 28)
         img.set_data(x_img)
         return [img]
