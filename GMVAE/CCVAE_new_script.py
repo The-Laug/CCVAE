@@ -23,8 +23,8 @@ from compare import save_performance
 # --- CONSOLIDATED EPSILON ---
 EPS = 1e-6 
 
-NUM_EPOCHS = 200
-learning_rate = 1e-3
+NUM_EPOCHS = 400
+learning_rate = 5e-4
 hidden_dim = 500
 #take learning rate and hidden dim from command line input
 
@@ -522,8 +522,6 @@ def train_from_scratch(model: 'CCVAE',vi:VariationalInference, train_loader, tes
                 )
     return model
 
-# %%
-
 if __name__ == "__main__":
 
     if torch.cuda.is_available():
@@ -572,9 +570,9 @@ if __name__ == "__main__":
     vi = VariationalInference(
         zero_beta_epochs = 20,
         base_beta=0.1, 
-        warmup_epochs=40, # Matches setting from train_from_scratch
+        warmup_epochs=80, # Matches setting from train_from_scratch
         max_beta=1.0, 
-        C_free=2.0        # Matches setting from train_from_scratch (Free-Bits)
+        C_free=25.0       # Matches setting from train_from_scratch (Free-Bits)
     ).to(device)
 
     
@@ -585,24 +583,20 @@ if __name__ == "__main__":
     recon_data = []
     kl_data = []
 
+
+    path = f"saves/CCVAE/{test_name}"
+
     # Check if trained model exists
-    if test_name != None:
-        if not skip_load and os.path.exists(f"saves/CCVAE/{test_name}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth"):
-            model.load_state_dict(torch.load(f"saves/CCVAE/{test_name}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth", weights_only=True, map_location=device))
-        else:
-            path = f"saves/CCVAE/{test_name}"
-            if not os.path.exists(path):
+    if not skip_load and os.path.exists(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth"): # If skip load is false and the model exists
+            # Load the model
+            model.load_state_dict(torch.load(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth", weights_only=True, map_location=device))
+    else:
+        if not os.path.exists(path):
                 os.mkdir(path)
-            model = train_from_scratch(model, vi, train_loader, test_loader, device)
-            save_performance(f'{path}/performance', loss_data, recon_data, kl_data)
-            make_new_vae_plots(model, loss_data, recon_data, kl_data, model(next(iter(test_loader))[0].to(device))[0], f'{path}/performance_plot.png') # save final graph
-            torch.save(model.state_dict(), f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth")
-    else: # can delete bottom part in future
-        if os.path.exists(f"saves/CCVAE/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth"):
-            model.load_state_dict(torch.load(f"saves/CCVAE/{test_name}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}{'_' + test_name if test_name != None else ''}.pth", weights_only=True, map_location=device))
-        else:
-            model = train_from_scratch(model, vi, train_loader, test_loader, device)
-            torch.save(model.state_dict(), f"saves/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth")
+        model = train_from_scratch(model, vi, train_loader, test_loader, device)
+        save_performance(f'{path}/performance', loss_data, recon_data, kl_data)
+        make_new_vae_plots(model, loss_data, recon_data, kl_data, model(next(iter(test_loader))[0].to(device))[0], f'{path}/performance_plot.png') # save final graph
+        torch.save(model.state_dict(), f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth")
 
     # Instantiate the VariationalInference module with the training hyperparameters
     print("-------------")
@@ -613,7 +607,7 @@ if __name__ == "__main__":
 
     montecarlo_nll(model, test_loader, device, K=500)
 
-# %%
+
 import importlib
 import plotting
 importlib.reload(plotting)
@@ -648,28 +642,30 @@ def generate_plots(model: CCVAE, test_loader, single_graph=None):
 
     # 1. Generate T-SNE plot
     if single_graph == None or single_graph == 'tSNE':
+        print("Plotting tSNE graph...")
         fig, ax = plt.subplots()
         plot_latents(ax, zs, ys, model.latent_dim)   # <-- use the correct plot function
         plt.xticks([]) # remove tick labels
         plt.yticks([]) 
         plt.savefig(f"plots/cc_{model.latent_dim}_tSNE.svg", format="svg", bbox_inches='tight')
-        plt.show()
+        #plt.show()
 
     # 2. Generate MDS plot
     if single_graph == None or single_graph == 'MDS':
+        print("Plotting MDS graph...")
         fig, ax = plt.subplots()
         plot_mds(ax, zs, ys, model.latent_dim)
         plt.xticks([]) # remove tick labels
         plt.yticks([]) 
         plt.savefig(f"plots/cc_{model.latent_dim}_MDS.svg", format="svg", bbox_inches='tight')
-        plt.show()
+        #plt.show()
 
     # 3. Plot one-hot latent value encoding
     if single_graph == None or single_graph == 'OH':
         fig, ax = plt.subplots()
         plot_latent_dim_wise_reconstruct(ax, model, model.latent_dim, device)
         plt.savefig(f"plots/cc_{model.latent_dim}_one-hot-latent-encoding.png", format="png", bbox_inches='tight')
-        plt.show()
+        #plt.show()
 
     # 4. Plot simplex visualization
     if single_graph == None or single_graph == 'Simplex':
@@ -691,7 +687,7 @@ def generate_plots(model: CCVAE, test_loader, single_graph=None):
         plot_mnist_simplex(latent_matrix, labels, latent_dim, ax=ax)
         plt.tight_layout()
         plt.savefig(f"plots/cc_{model.latent_dim}_simplex.svg", format="svg", bbox_inches='tight')
-        plt.show()
+        #plt.show()
 
 generate_plots(model, test_loader)
 
