@@ -31,7 +31,7 @@ for lr in "${learning_rates[@]}"; do
             echo "Launching run: lr=$lr  hidden_dim=$hd  numbers=$num"
 
             # Run Python training script in background
-            python CCVAE_new_script.py "$lr" "$hd" "$num" > "logs/run_lr${lr}_hd${hd}_num${num}.log" 2>&1 &
+            python /zhome/7f/5/168608/CCVAE/GMVAE/CCVAE_new_script.py "$lr" "$hd" "$num" > "/zhome/7f/5/168608/CCVAE/GMVAE/logs/run_lr${lr}_hd${hd}_num${num}.log" 2>&1 &
 
             # Enforce parallel job limit
             wait_for_jobs

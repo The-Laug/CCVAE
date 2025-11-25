@@ -23,7 +23,7 @@ from compare import save_performance
 # --- CONSOLIDATED EPSILON ---
 EPS = 1e-6 
 
-NUM_EPOCHS = 50
+NUM_EPOCHS = 200
 learning_rate = 1e-3
 hidden_dim = 500
 #take learning rate and hidden dim from command line input
