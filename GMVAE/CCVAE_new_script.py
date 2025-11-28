@@ -7,22 +7,21 @@ import torchvision
 import torchvision.transforms as T
 from torch.utils.data import DataLoader
 from torch import Tensor
-from torch.distributions import Distribution
 import os
-from collections import defaultdict
 import importlib
-
 import plotting
+import numpy as np
 importlib.reload(plotting)
 from plotting import make_new_vae_plots
-
 import compare
 importlib.reload(compare)
 from compare import save_performance 
+import random
 
 # --- CONSOLIDATED EPSILON ---
+limit = 8
 EPS = 1e-6 
-NUM_EPOCHS = 200
+NUM_EPOCHS = 50
 learning_rate = 5e-4
 hidden_dim = 500
 #take learning rate and hidden dim from command line input
@@ -34,6 +33,30 @@ if len(sys.argv) > 2:
 if len(sys.argv) > 3:
     numbers = int(sys.argv[3])
 
+
+def set_seed(seed):
+    """
+    Sets the seed for reproducibility across all libraries.
+    """
+    # 1. Python's built-in random library
+    random.seed(seed)
+    
+    # 2. NumPy (used for your annealing schedule)
+    np.random.seed(seed)
+    
+    # 3. PyTorch (CPU)
+    torch.manual_seed(seed)
+    
+    # 4. PyTorch (GPU)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed) # If using multiple GPUs
+    
+    # 5. Deterministic Algorithms (Crucial for CUDA)
+    # This ensures that convolution algorithms are deterministic
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False # Disables auto-tuning for speed (which introduces noise)
+    
+    print(f"Random Seed set to: {seed}")
 
 # ======================================================================
 #  HELPER FUNCTIONS (Continuous Categorical Distribution)
@@ -196,6 +219,7 @@ class MLPEncoder(nn.Module):
             nn.Linear(input_dim, hidden_dims),
             nn.BatchNorm1d(hidden_dims),
             nn.ReLU(),
+            nn.BatchNorm1d(hidden_dims),
             nn.Linear(hidden_dims, latent_dim)
         )
 
@@ -206,10 +230,15 @@ class BernoulliDecoder(nn.Module):
     def __init__(self, latent_dim, hidden_dims, output_dim):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(latent_dim, hidden_dims, bias=False), 
+            nn.Linear(latent_dim, hidden_dims, bias=False),
             nn.ReLU(),
             nn.Linear(hidden_dims, output_dim, bias=False)
+
+            
         )
+
+    def forward(self, z):
+        return self.net(z)
 
     def forward(self, z):
         return self.net(z)
@@ -219,7 +248,7 @@ class CCVAE(nn.Module):
         super().__init__()
         
         self.latent_dim = latent_dim
-        if len(numbers)>=7:
+        if self.latent_dim >=limit:
             self.logits_bn = nn.BatchNorm1d(latent_dim)
         self.encoder = MLPEncoder(input_dim, enc_hidden_dims, latent_dim)
         self.decoder = BernoulliDecoder(latent_dim, dec_hidden_dims, input_dim)
@@ -230,15 +259,16 @@ class CCVAE(nn.Module):
 
     def forward(self, x):
         annealing_rate = -0.005
-        # Gradually make the softmax points more sharp to enforce model confidence! 
+        # Gradually make the softmax data more strengthen model predictions! 
         tau = np.maximum(0.5, 1.0 * np.exp(annealing_rate * self.current_epoch))
 
-        lam_logits = self.encoder(x)
+        lam_logits = self.encoder(x) # lam is the mean parameter [B, K]
 
-        if len(numbers)>=7:
+        if self.latent_dim>=limit:
             print("Using batchnorm on logits to prevent posterior collapse...")
             lam_logits = self.logits_bn(lam_logits)
-        # lam is the mean parameter [B, K]
+        
+        
         lam = F.softmax(lam_logits/tau, dim=1)
 
         # Directly use the reparameterized sampler
@@ -257,7 +287,8 @@ class VariationalInference(nn.Module):
     including KL Warmup and Free-Bits regularization.
     """
 
-    def __init__(self, zero_beta_epochs:float,  base_beta: float = 1.0, warmup_epochs: int = 100, max_beta: float = 1.0, C_free: float = 0.0):
+
+    def __init__(self, zero_beta_epochs:float,  base_beta: float, warmup_epochs: int, max_beta: float):
         super().__init__()
         self.zero_beta_epochs = zero_beta_epochs
         self.base_beta = base_beta
@@ -265,7 +296,6 @@ class VariationalInference(nn.Module):
         self.warmup_epochs = warmup_epochs
         self.max_beta = max_beta
         # C_free is the Free-Bits threshold
-        self.C_free = C_free
         
     def get_beta(self, epoch: int) -> float:
         """
@@ -312,16 +342,12 @@ class VariationalInference(nn.Module):
 
         # KL = E_z [log q(z) - log p(z)]
         kl = (log_q - log_p).mean() # True KL (for logging)
-        
-        # --- 3. Free-Bits Regularization ---
-        # kl_penalty = max(KL, C_free)
-        kl_penalty = torch.max(kl, torch.tensor(self.C_free, device=kl.device))
-        
+
         # --- 4. β-ELBO Loss ---
         beta = self.get_beta(epoch)
         
         # Loss = Recon Loss + beta * KL_penalty (Minimizing the Negative ELBO)
-        loss = recon_loss + beta * kl_penalty
+        loss = recon_loss + beta * kl
         
         return loss, recon_loss, kl
     
@@ -523,6 +549,8 @@ def train_from_scratch(model: 'CCVAE',vi:VariationalInference, train_loader, tes
 
 if __name__ == "__main__":
 
+    set_seed(42)
+
     if torch.cuda.is_available():
         device = torch.device("cuda")
     #### IMPORTANT, the torch.gamma and torch.digamma explode when using mps (floating point errors)
@@ -548,15 +576,19 @@ if __name__ == "__main__":
         dataset.targets = dataset.targets[mask]
         return dataset
 
-    # Filter for digits 1, 2, and 4
     nums = list(range(0, numbers))
+    latent_dim = len(nums)
+
+     # Filter for digits 1, 2, and 4 if the latent_dimension = 3
+    if latent_dim == 3:
+        nums = [1,2,4]
+
     trainset = filter_mnist(trainset, keep=nums)
     testset = filter_mnist(testset, keep=nums)
     train_loader = DataLoader(trainset, batch_size=256, shuffle=True, num_workers=0)
     test_loader = DataLoader(testset, batch_size=256, shuffle=True, num_workers = 0)
 
     input_dim = 28 * 28
-    latent_dim = len(nums)
     
     print(f"Training CCVAE with latent dim: {latent_dim}")
     print(f"used numbers: {nums}")
@@ -567,11 +599,10 @@ if __name__ == "__main__":
                   latent_dim=latent_dim).to(device)
 
     vi = VariationalInference(
-            zero_beta_epochs = 50,
-            base_beta=1.0, 
-            warmup_epochs=100,
-            max_beta=1.0, 
-            C_free=20.0 
+            zero_beta_epochs = 10,
+            base_beta=0.75, 
+            warmup_epochs=20,
+            max_beta=1.0,
         ).to(device)
     
     test_name = f"hyperparam_test_lr_{learning_rate}_hd_{hidden_dim}"  # Set to None to train from scratch without loading/saving
