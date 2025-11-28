@@ -22,8 +22,7 @@ from compare import save_performance
 
 # --- CONSOLIDATED EPSILON ---
 EPS = 1e-6 
-
-NUM_EPOCHS = 400
+NUM_EPOCHS = 200
 learning_rate = 5e-4
 hidden_dim = 500
 #take learning rate and hidden dim from command line input
@@ -197,11 +196,6 @@ class MLPEncoder(nn.Module):
             nn.Linear(input_dim, hidden_dims),
             nn.BatchNorm1d(hidden_dims),
             nn.ReLU(),
-            
-            # nn.Linear(hidden_dims, hidden_dims),
-            nn.BatchNorm1d(hidden_dims),
-            # nn.ReLU(),
-            
             nn.Linear(hidden_dims, latent_dim)
         )
 
@@ -213,7 +207,6 @@ class BernoulliDecoder(nn.Module):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(latent_dim, hidden_dims, bias=False), 
-            # nn.BatchNorm1d(hidden_dims),
             nn.ReLU(),
             nn.Linear(hidden_dims, output_dim, bias=False)
         )
@@ -226,6 +219,8 @@ class CCVAE(nn.Module):
         super().__init__()
         
         self.latent_dim = latent_dim
+        if len(numbers)>=7:
+            self.logits_bn = nn.BatchNorm1d(latent_dim)
         self.encoder = MLPEncoder(input_dim, enc_hidden_dims, latent_dim)
         self.decoder = BernoulliDecoder(latent_dim, dec_hidden_dims, input_dim)
 
@@ -233,12 +228,18 @@ class CCVAE(nn.Module):
         self.explore_epochs = 100 
         self.current_epoch = 1
 
-
     def forward(self, x):
+        annealing_rate = -0.005
+        # Gradually make the softmax points more sharp to enforce model confidence! 
+        tau = np.maximum(0.5, 1.0 * np.exp(annealing_rate * self.current_epoch))
+
         lam_logits = self.encoder(x)
-        
+
+        if len(numbers)>=7:
+            print("Using batchnorm on logits to prevent posterior collapse...")
+            lam_logits = self.logits_bn(lam_logits)
         # lam is the mean parameter [B, K]
-        lam = F.softmax(lam_logits, dim=1)
+        lam = F.softmax(lam_logits/tau, dim=1)
 
         # Directly use the reparameterized sampler
         z = sample_cc_ordered_reparam(lam) 
@@ -255,8 +256,6 @@ class VariationalInference(nn.Module):
     Computes the beta-ELBO loss for the CCVAE based on model outputs, 
     including KL Warmup and Free-Bits regularization.
     """
-
-
 
     def __init__(self, zero_beta_epochs:float,  base_beta: float = 1.0, warmup_epochs: int = 100, max_beta: float = 1.0, C_free: float = 0.0):
         super().__init__()
@@ -553,8 +552,8 @@ if __name__ == "__main__":
     nums = list(range(0, numbers))
     trainset = filter_mnist(trainset, keep=nums)
     testset = filter_mnist(testset, keep=nums)
-    train_loader = DataLoader(trainset, batch_size=128, shuffle=True, num_workers=0)
-    test_loader = DataLoader(testset, batch_size=128, shuffle=True, num_workers = 0)
+    train_loader = DataLoader(trainset, batch_size=256, shuffle=True, num_workers=0)
+    test_loader = DataLoader(testset, batch_size=256, shuffle=True, num_workers = 0)
 
     input_dim = 28 * 28
     latent_dim = len(nums)
@@ -568,13 +567,12 @@ if __name__ == "__main__":
                   latent_dim=latent_dim).to(device)
 
     vi = VariationalInference(
-        zero_beta_epochs = 20,
-        base_beta=0.1, 
-        warmup_epochs=80, # Matches setting from train_from_scratch
-        max_beta=1.0, 
-        C_free=25.0       # Matches setting from train_from_scratch (Free-Bits)
-    ).to(device)
-
+            zero_beta_epochs = 50,
+            base_beta=1.0, 
+            warmup_epochs=100,
+            max_beta=1.0, 
+            C_free=20.0 
+        ).to(device)
     
     test_name = f"hyperparam_test_lr_{learning_rate}_hd_{hidden_dim}"  # Set to None to train from scratch without loading/saving
     skip_load = False # if true, do not load a model
@@ -690,5 +688,3 @@ def generate_plots(model: CCVAE, test_loader, single_graph=None):
         #plt.show()
 
 generate_plots(model, test_loader)
-
-

@@ -516,7 +516,6 @@ def train_from_scratch(model: 'CCVAE',vi:VariationalInference, train_loader, tes
                 )
     return model
 
-# %%
 if __name__ == "__main__":
 
     if torch.cuda.is_available():
