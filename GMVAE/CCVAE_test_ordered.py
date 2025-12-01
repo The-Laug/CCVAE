@@ -21,7 +21,7 @@ import random
 # --- CONSOLIDATED EPSILON ---
 limit = 8
 EPS = 1e-6 
-NUM_EPOCHS = 10
+NUM_EPOCHS = 50
 learning_rate = 5e-4
 hidden_dim = 500
 #take learning rate and hidden dim from command line input
@@ -287,8 +287,7 @@ class CCVAE(nn.Module):
         if self.latent_dim>=limit:
             #"Using batchnorm on logits to prevent posterior collapse...
             lam_logits = self.logits_bn(lam_logits)
-        
-        
+
         lam = F.softmax(lam_logits/tau, dim=1)
 
         # Directly use the reparameterized sampler

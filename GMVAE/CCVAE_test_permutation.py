@@ -19,8 +19,9 @@ from compare import save_performance
 import random
 
 # --- CONSOLIDATED EPSILON ---
+limit = 8
 EPS = 1e-6
-NUM_EPOCHS = 50
+NUM_EPOCHS = 200
 learning_rate = 5e-4
 hidden_dim = 500
 
@@ -395,11 +396,20 @@ class CCVAE(nn.Module):
         self.decoder = BernoulliDecoder(latent_dim, dec_hidden_dims, input_dim)
         self.explore_epochs = 100 
         self.current_epoch = 1
+        self.latent_dim = latent_dim
+
+        if self.latent_dim >=limit:
+            self.logits_bn = nn.BatchNorm1d(latent_dim)
 
     def forward(self, x):
         tau = np.maximum(0.1, 1.0 * np.exp(-0.002 * self.current_epoch))
         lam_logits = self.encoder(x) 
+    
         
+        if self.latent_dim>=limit:
+            #"Using batchnorm on logits to prevent posterior collapse...
+            lam_logits = self.logits_bn(lam_logits)
+
         lam = F.softmax(lam_logits/tau, dim=1)
         
         # UPDATED: Use the Robust Permutation Sampler (Iterative + Fallback)
@@ -663,9 +673,9 @@ if __name__ == "__main__":
                   latent_dim=latent_dim).to(device)
 
     vi = VariationalInference(
-            zero_beta_epochs = 10,
+            zero_beta_epochs = 50,
             base_beta=1.0, 
-            warmup_epochs=20,
+            warmup_epochs=75,
             max_beta=1.0,
         ).to(device)
     
