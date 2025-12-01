@@ -258,8 +258,7 @@ def cc_log_norm_const_torch(eta: Tensor) -> Tensor:
     # 1. Construct full eta (append 0 for the Kth component)
     eta_full = torch.cat([eta, torch.zeros(B, 1, device=device, dtype=eta.dtype)], dim=1)
     
-    # 2. Add Jitter (Increased slightly to 1e-4 for better stability)
-    jitter = torch.arange(K, device=device) * 1e-4
+    jitter = torch.arange(K, device=device) * 1e-5
     eta_full = eta_full + jitter.unsqueeze(0)
 
     # 3. Compute the denominator product: prod_{i!=k} (eta_i - eta_k) 
@@ -371,7 +370,7 @@ class CCVAE(nn.Module):
 
     def forward(self, x):
         # Slower decay and lower floor for finer optimization
-        tau = np.maximum(0.1, 1.0 * np.exp(-0.002 * self.current_epoch))
+        tau = np.maximum(0.01, 1.0 * np.exp(-0.002 * self.current_epoch))
         
         lam_logits = self.encoder(x) 
         lam = F.softmax(lam_logits/tau, dim=1)

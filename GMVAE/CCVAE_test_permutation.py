@@ -20,7 +20,7 @@ import random
 
 # --- CONSOLIDATED EPSILON ---
 EPS = 1e-6
-NUM_EPOCHS = 200
+NUM_EPOCHS = 199
 learning_rate = 5e-4
 hidden_dim = 500
 
@@ -85,9 +85,11 @@ def inv_cdf_torch(u, l):
     # 4. Select: u if near 0.5, calculated x otherwise
     return torch.where(mask_near_half, u, x)
 
-def sample_cc_permutation(lam, max_attempts=50, verbose=False):
+
+def sample_cc_permutation(lam, max_attempts=50, verbose=True):
     """
     Robust Permutation Sampler with Statistics Tracking.
+    Stage 2 uses the Optimized Ordered Rejection Sampler (Sort Once).
     """
     B, K = lam.shape
     device = lam.device
@@ -180,44 +182,82 @@ def sample_cc_permutation(lam, max_attempts=50, verbose=False):
     remaining_after_stage_1 = active_mask.sum().item()
     count_stage_1 = total_batch_size - remaining_after_stage_1
 
-    # --- STAGE 2: Fallback (Ordered Sampler) ---
+    # --- STAGE 2: Fallback (Ordered Sampler - Optimized) ---
     ordered_attempts = 0
     if active_mask.any():
-        for _ in range(50):
-            if not active_mask.any():
+        # 1. Isolate the subset that needs the fallback
+        stage2_global_indices = torch.nonzero(active_mask).squeeze(-1)
+        lam_stage2 = lam[stage2_global_indices]
+        B_stage2 = lam_stage2.size(0)
+        
+        # [cite_start]2. Sort ONCE [cite: 166]
+        # This is the optimization: we sort the fallback batch only once.
+        lam_sorted, sort_indices = torch.sort(lam_stage2, dim=1, descending=True)
+        lam_1 = lam_sorted[:, 0].unsqueeze(1)
+        lam_rest = lam_sorted[:, 1:]
+        
+        # 3. Pre-calculate parameters
+        cb_params = lam_rest / (lam_rest + lam_1 + EPS)
+        
+        # 4. Local storage for results (on the sorted basis)
+        x_rest_stage2 = torch.zeros(B_stage2, K-1, device=device, dtype=dtype)
+        
+        # 5. Local mask tracks which of the B_stage2 items are done
+        mask_local = torch.ones(B_stage2, dtype=torch.bool, device=device)
+        
+        # 6. Efficient Masked Loop
+        # We allow 100 attempts here to safely clear the "Valley of Death"
+        for _ in range(100): 
+            if not mask_local.any():
                 break
-            
             ordered_attempts += 1
             
-            active_indices = torch.nonzero(active_mask).squeeze(-1)
-            lam_fallback = lam[active_indices]
-            current_B_fall = lam_fallback.size(0)
+            # Select only parameters for currently active items
+            active_params = cb_params[mask_local]
+            n_active = mask_local.sum()
             
-            lam_sorted, indices = torch.sort(lam_fallback, dim=1, descending=True)
-            lam_1 = lam_sorted[:, 0].unsqueeze(1)
-            lam_rest = lam_sorted[:, 1:]
+            # Sample
+            u = torch.rand(n_active, K-1, device=device, dtype=dtype)
+            x_cand = inv_cdf_torch(u, active_params)
             
-            cb_params = lam_rest / (lam_rest + lam_1 + EPS)
-            u = torch.rand(current_B_fall, K-1, device=device, dtype=dtype)
-            x_cand = inv_cdf_torch(u, cb_params)
-            
+            # Check Sum Constraint
             sums = x_cand.sum(dim=1)
-            accepted_fall = (sums <= 1.0 + 1e-4)
+            accepted = (sums <= 1.0 + 1e-4) # Tolerance included
             
-            if accepted_fall.any():
-                x_cand_acc = x_cand[accepted_fall]
-                x_1 = (1.0 - x_cand_acc.sum(dim=1, keepdim=True)).clamp(min=EPS)
-                x_sorted_res = torch.cat([x_1, x_cand_acc], dim=1)
+            if accepted.any():
+                # Map accepted (subset) -> mask_local (active set) -> x_rest_stage2 (storage)
+                active_indices_local = torch.nonzero(mask_local).squeeze(-1)
+                accepted_indices_local = active_indices_local[accepted]
                 
-                indices_acc = indices[accepted_fall] 
-                x_final_fallback = torch.zeros(x_cand_acc.size(0), K, device=device, dtype=dtype)
-                x_final_fallback.scatter_(1, indices_acc, x_sorted_res)
+                x_rest_stage2[accepted_indices_local] = x_cand[accepted]
                 
-                accepted_global_indices = active_indices[accepted_fall]
-                final_x[accepted_global_indices] = x_final_fallback
-                
-                active_mask = active_mask.clone()
-                active_mask[accepted_global_indices] = False
+                mask_local = mask_local.clone()
+                mask_local[accepted_indices_local] = False
+        
+        # 7. Reconstruction and Scatter (Global Update)
+        # Find which items in the local batch succeeded
+        succeeded_local_mask = ~mask_local
+        
+        if succeeded_local_mask.any():
+            # Get the partial results (K-1)
+            x_rest_success = x_rest_stage2[succeeded_local_mask]
+            
+            # [cite_start]Compute x_1 (slack variable) [cite: 176]
+            x_1 = (1.0 - x_rest_success.sum(dim=1, keepdim=True)).clamp(min=EPS)
+            x_sorted_success = torch.cat([x_1, x_rest_success], dim=1)
+            
+            # Unsort: Map sorted result back to original order
+            sort_indices_success = sort_indices[succeeded_local_mask]
+            x_stage2_success = torch.zeros_like(x_sorted_success)
+            x_stage2_success.scatter_(1, sort_indices_success, x_sorted_success)
+            
+            # Scatter to Global: Map local batch back to full batch
+            success_global_indices = stage2_global_indices[succeeded_local_mask]
+            final_x[success_global_indices] = x_stage2_success
+            
+            # Update Global Mask
+            active_mask = active_mask.clone()
+            active_mask[success_global_indices] = False
                 
     # Stats after Stage 2
     remaining_final = active_mask.sum().item()
@@ -238,6 +278,7 @@ def sample_cc_permutation(lam, max_attempts=50, verbose=False):
               f"Deterministic: {pct_fail:.1f}%")
 
     return final_x
+
 
 def lambda_to_eta(lam: Tensor) -> Tensor:
     # Converts mean parameter lambda [B, K] to natural parameter eta [B, K-1].
@@ -261,9 +302,8 @@ def cc_log_norm_const_torch(eta: Tensor) -> Tensor:
     
     # 1. Construct full eta (append 0 for the Kth component)
     eta_full = torch.cat([eta, torch.zeros(B, 1, device=device, dtype=eta.dtype)], dim=1)
-    
-    # 2. Add Jitter (Increased slightly to 1e-4 for better stability)
-    jitter = torch.arange(K, device=device) * 1e-4
+
+    jitter = torch.arange(K, device=device) * 1e-5
     eta_full = eta_full + jitter.unsqueeze(0)
 
     # 3. Compute the denominator product: prod_{i!=k} (eta_i - eta_k) 
@@ -553,7 +593,8 @@ def test_loop(model: 'CCVAE', vi: VariationalInference, test_loader, device):
     return mean_loss, mean_recon, mean_kl
 
 def train_from_scratch(model: 'CCVAE',vi:VariationalInference, train_loader, test_loader, device):
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5)
     for epoch in range(0, NUM_EPOCHS+1):
         model.current_epoch = epoch
         print(f"Epoch {epoch}/{NUM_EPOCHS}:")
@@ -638,8 +679,8 @@ if __name__ == "__main__":
     recon_data = []
     kl_data = []
 
-    path = f"saves/CCVAE/{test_name}"
-    performance_path = f"saves/CCVAE/{test_name}/performance"
+    path = f"saves/CCVAE/permutation/{test_name}"
+    performance_path = f"saves/CCVAE/permutation/{test_name}/performance"
 
     if not skip_load and os.path.exists(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth"): 
             model.load_state_dict(torch.load(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth", weights_only=True, map_location=device))

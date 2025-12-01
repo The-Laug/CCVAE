@@ -78,7 +78,7 @@ def inv_cdf_torch(u, l):
 
 
 
-def sample_cc_ordered_reparam(lam, debug=False):
+def sample_cc_ordered_reparam(lam, debug=True):
     """
     Ordered Rejection Sampler (Algorithm 1 in the CC paper [cite: 164]).
     Sorts lambda (lam) to maximize acceptance rate.
@@ -630,8 +630,8 @@ if __name__ == "__main__":
     kl_data = []
 
 
-    path = f"saves/CCVAE/{test_name}"
-    performance_path = f"saves/CCVAE/{test_name}/performance"
+    path = f"saves/CCVAE/ordered/{test_name}"
+    performance_path = f"saves/CCVAE/ordered/{test_name}/performance"
 
     # Check if trained model exists
     if not skip_load and os.path.exists(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth"): # If skip load is false and the model exists
