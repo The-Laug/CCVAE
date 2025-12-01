@@ -1,0 +1,673 @@
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [-25.668983..0.9100622].
+Current device: cuda
+Using learning rate: 0.0001, hidden dim: 1024
+Training CCVAE with latent dim: 7
+used numbers: [0, 1, 2, 3, 4, 5, 6]
+epochs : 200
+Number of parameters: 3154759
+beta variables: zero_beta_epochs=10, base_beta=0.8, warmup_epochs=100, max_beta=1.0, C_free=2.0
+Epoch 0/200:
+--------
+Negative ELBO: 253.5091 | Recon Loss: 253.5091 | KL: 51.9103
+Negative ELBO: 204.7845 | Recon Loss: 204.7845 | KL: 51.6921
+Epoch 1/200:
+--------
+Negative ELBO: 203.0848 | Recon Loss: 203.0848 | KL: 45.1519
+Epoch 2/200:
+--------
+Negative ELBO: 200.0598 | Recon Loss: 200.0598 | KL: 41.7708
+Epoch 3/200:
+--------
+Negative ELBO: 197.1677 | Recon Loss: 197.1677 | KL: 39.5960
+Epoch 4/200:
+--------
+Negative ELBO: 194.9867 | Recon Loss: 194.9867 | KL: 42.6197
+Epoch 5/200:
+--------
+Negative ELBO: 192.5031 | Recon Loss: 192.5031 | KL: 40.3010
+Negative ELBO: 191.7450 | Recon Loss: 191.7450 | KL: 36.3587
+Epoch 6/200:
+--------
+Negative ELBO: 191.8381 | Recon Loss: 191.8381 | KL: 36.7004
+Epoch 7/200:
+--------
+Negative ELBO: 191.6092 | Recon Loss: 191.6092 | KL: 35.1783
+Epoch 8/200:
+--------
+Negative ELBO: 191.6007 | Recon Loss: 191.6007 | KL: 33.5924
+Epoch 9/200:
+--------
+Negative ELBO: 191.5250 | Recon Loss: 191.5250 | KL: 33.1906
+Epoch 10/200:
+--------
+Negative ELBO: 191.4761 | Recon Loss: 191.4761 | KL: 32.9080
+Negative ELBO: 191.1329 | Recon Loss: 191.1329 | KL: 32.6149
+Epoch 11/200:
+--------
+Negative ELBO: 191.8223 | Recon Loss: 191.5629 | KL: 32.4268
+Epoch 12/200:
+--------
+Negative ELBO: 191.8358 | Recon Loss: 191.3234 | KL: 32.0219
+Epoch 13/200:
+--------
+Negative ELBO: 192.1276 | Recon Loss: 191.3638 | KL: 31.8232
+Epoch 14/200:
+--------
+Negative ELBO: 192.3497 | Recon Loss: 191.3414 | KL: 31.5104
+Epoch 15/200:
+--------
+Negative ELBO: 192.6117 | Recon Loss: 191.3706 | KL: 31.0272
+Negative ELBO: 192.1304 | Recon Loss: 190.9014 | KL: 30.7266
+Epoch 16/200:
+--------
+Negative ELBO: 193.0453 | Recon Loss: 191.5636 | KL: 30.8670
+Epoch 17/200:
+--------
+Negative ELBO: 192.9554 | Recon Loss: 191.2318 | KL: 30.7779
+Epoch 18/200:
+--------
+Negative ELBO: 193.3446 | Recon Loss: 191.3798 | KL: 30.7003
+Epoch 19/200:
+--------
+Negative ELBO: 193.5538 | Recon Loss: 191.3541 | KL: 30.5514
+Epoch 20/200:
+--------
+Negative ELBO: 193.7641 | Recon Loss: 191.3274 | KL: 30.4578
+Negative ELBO: 193.4686 | Recon Loss: 191.0407 | KL: 30.3488
+Epoch 21/200:
+--------
+Negative ELBO: 193.9173 | Recon Loss: 191.2432 | KL: 30.3874
+Epoch 22/200:
+--------
+Negative ELBO: 194.2763 | Recon Loss: 191.3676 | KL: 30.2985
+Epoch 23/200:
+--------
+Negative ELBO: 194.4342 | Recon Loss: 191.2800 | KL: 30.3290
+Epoch 24/200:
+--------
+Negative ELBO: 194.6703 | Recon Loss: 191.2828 | KL: 30.2462
+Epoch 25/200:
+--------
+Negative ELBO: 194.8289 | Recon Loss: 191.1900 | KL: 30.3247
+Negative ELBO: 194.7630 | Recon Loss: 191.1228 | KL: 30.3343
+Epoch 26/200:
+--------
+Negative ELBO: 195.0789 | Recon Loss: 191.2060 | KL: 30.2567
+Epoch 27/200:
+--------
+Negative ELBO: 195.3880 | Recon Loss: 191.2812 | KL: 30.1973
+Epoch 28/200:
+--------
+Negative ELBO: 195.6805 | Recon Loss: 191.3298 | KL: 30.2131
+Epoch 29/200:
+--------
+Negative ELBO: 195.9292 | Recon Loss: 191.3447 | KL: 30.1612
+Epoch 30/200:
+--------
+Negative ELBO: 196.0139 | Recon Loss: 191.1895 | KL: 30.1526
+Negative ELBO: 195.8794 | Recon Loss: 191.0446 | KL: 30.2180
+Epoch 31/200:
+--------
+Negative ELBO: 196.3932 | Recon Loss: 191.3288 | KL: 30.1452
+Epoch 32/200:
+--------
+Negative ELBO: 196.5179 | Recon Loss: 191.2127 | KL: 30.1431
+Epoch 33/200:
+--------
+Negative ELBO: 196.7820 | Recon Loss: 191.2430 | KL: 30.1033
+Epoch 34/200:
+--------
+Negative ELBO: 197.1266 | Recon Loss: 191.3411 | KL: 30.1327
+Epoch 35/200:
+--------
+Negative ELBO: 197.2311 | Recon Loss: 191.2181 | KL: 30.0650
+Negative ELBO: 196.9476 | Recon Loss: 190.9593 | KL: 29.9412
+Epoch 36/200:
+--------
+Negative ELBO: 197.4941 | Recon Loss: 191.2387 | KL: 30.0740
+Epoch 37/200:
+--------
+Negative ELBO: 197.7823 | Recon Loss: 191.2776 | KL: 30.1146
+Epoch 38/200:
+--------
+Negative ELBO: 197.9637 | Recon Loss: 191.2264 | KL: 30.0773
+Epoch 39/200:
+--------
+Negative ELBO: 198.4140 | Recon Loss: 191.4192 | KL: 30.1497
+Epoch 40/200:
+--------
+Negative ELBO: 198.5124 | Recon Loss: 191.3011 | KL: 30.0470
+Negative ELBO: 198.3185 | Recon Loss: 191.1062 | KL: 30.0513
+Epoch 41/200:
+--------
+Negative ELBO: 198.7094 | Recon Loss: 191.2514 | KL: 30.0725
+Epoch 42/200:
+--------
+Negative ELBO: 198.9830 | Recon Loss: 191.2856 | KL: 30.0680
+Epoch 43/200:
+--------
+Negative ELBO: 199.1986 | Recon Loss: 191.2689 | KL: 30.0368
+Epoch 44/200:
+--------
+Negative ELBO: 199.5212 | Recon Loss: 191.3535 | KL: 30.0283
+Epoch 45/200:
+--------
+Negative ELBO: 199.5800 | Recon Loss: 191.1701 | KL: 30.0355
+Negative ELBO: 199.6301 | Recon Loss: 191.2244 | KL: 30.0201
+Epoch 46/200:
+--------
+Negative ELBO: 199.9297 | Recon Loss: 191.2901 | KL: 29.9988
+Epoch 47/200:
+--------
+Negative ELBO: 200.1742 | Recon Loss: 191.3080 | KL: 29.9535
+Epoch 48/200:
+--------
+Negative ELBO: 200.3834 | Recon Loss: 191.2761 | KL: 29.9584
+Epoch 49/200:
+--------
+Negative ELBO: 200.6233 | Recon Loss: 191.2629 | KL: 30.0013
+Epoch 50/200:
+--------
+Negative ELBO: 200.7245 | Recon Loss: 191.1485 | KL: 29.9249
+Negative ELBO: 200.5534 | Recon Loss: 190.9666 | KL: 29.9585
+Epoch 51/200:
+--------
+Negative ELBO: 201.0953 | Recon Loss: 191.2581 | KL: 29.9914
+Epoch 52/200:
+--------
+Negative ELBO: 201.2717 | Recon Loss: 191.2028 | KL: 29.9670
+Epoch 53/200:
+--------
+Negative ELBO: 201.6278 | Recon Loss: 191.3040 | KL: 30.0111
+Epoch 54/200:
+--------
+Negative ELBO: 201.8199 | Recon Loss: 191.2415 | KL: 30.0521
+Epoch 55/200:
+--------
+Negative ELBO: 201.9776 | Recon Loss: 191.1971 | KL: 29.9458
+Negative ELBO: 201.6791 | Recon Loss: 190.8894 | KL: 29.9714
+Epoch 56/200:
+--------
+Negative ELBO: 202.1989 | Recon Loss: 191.1859 | KL: 29.9268
+Epoch 57/200:
+--------
+Negative ELBO: 202.5115 | Recon Loss: 191.2592 | KL: 29.9262
+Epoch 58/200:
+--------
+Negative ELBO: 202.7796 | Recon Loss: 191.2479 | KL: 30.0304
+Epoch 59/200:
+--------
+Negative ELBO: 202.9552 | Recon Loss: 191.2307 | KL: 29.9093
+Epoch 60/200:
+--------
+Negative ELBO: 203.2690 | Recon Loss: 191.3001 | KL: 29.9221
+Negative ELBO: 203.0949 | Recon Loss: 191.1488 | KL: 29.8652
+Epoch 61/200:
+--------
+Negative ELBO: 203.5657 | Recon Loss: 191.3553 | KL: 29.9275
+Epoch 62/200:
+--------
+Negative ELBO: 203.7707 | Recon Loss: 191.3286 | KL: 29.9089
+Epoch 63/200:
+--------
+Negative ELBO: 203.9652 | Recon Loss: 191.3184 | KL: 29.8273
+Epoch 64/200:
+--------
+Negative ELBO: 204.0648 | Recon Loss: 191.1963 | KL: 29.7881
+Epoch 65/200:
+--------
+Negative ELBO: 204.3480 | Recon Loss: 191.2563 | KL: 29.7539
+Negative ELBO: 203.9353 | Recon Loss: 190.8303 | KL: 29.7842
+Epoch 66/200:
+--------
+Negative ELBO: 204.6999 | Recon Loss: 191.3409 | KL: 29.8193
+Epoch 67/200:
+--------
+Negative ELBO: 204.9006 | Recon Loss: 191.3014 | KL: 29.8228
+Epoch 68/200:
+--------
+Negative ELBO: 205.2115 | Recon Loss: 191.3563 | KL: 29.8604
+Epoch 69/200:
+--------
+Negative ELBO: 205.3253 | Recon Loss: 191.2368 | KL: 29.8487
+Epoch 70/200:
+--------
+Negative ELBO: 205.6278 | Recon Loss: 191.2905 | KL: 29.8694
+Negative ELBO: 205.4130 | Recon Loss: 191.0543 | KL: 29.9140
+Epoch 71/200:
+--------
+Negative ELBO: 205.8520 | Recon Loss: 191.2627 | KL: 29.8961
+Epoch 72/200:
+--------
+Negative ELBO: 206.1360 | Recon Loss: 191.3073 | KL: 29.8964
+Epoch 73/200:
+--------
+Negative ELBO: 206.3317 | Recon Loss: 191.2402 | KL: 29.9435
+Epoch 74/200:
+--------
+Negative ELBO: 206.6149 | Recon Loss: 191.3673 | KL: 29.7805
+Epoch 75/200:
+--------
+Negative ELBO: 206.7161 | Recon Loss: 191.1420 | KL: 29.9501
+Negative ELBO: 206.4742 | Recon Loss: 190.8701 | KL: 30.0078
+Epoch 76/200:
+--------
+Negative ELBO: 207.0845 | Recon Loss: 191.2682 | KL: 29.9551
+Epoch 77/200:
+--------
+Negative ELBO: 207.3061 | Recon Loss: 191.2751 | KL: 29.9086
+Epoch 78/200:
+--------
+Negative ELBO: 207.4641 | Recon Loss: 191.2147 | KL: 29.8702
+Epoch 79/200:
+--------
+Negative ELBO: 207.6864 | Recon Loss: 191.2014 | KL: 29.8641
+Epoch 80/200:
+--------
+Negative ELBO: 207.9074 | Recon Loss: 191.1666 | KL: 29.8941
+Negative ELBO: 207.7216 | Recon Loss: 190.9906 | KL: 29.8768
+Epoch 81/200:
+--------
+Negative ELBO: 208.2597 | Recon Loss: 191.3180 | KL: 29.8268
+Epoch 82/200:
+--------
+Negative ELBO: 208.4046 | Recon Loss: 191.2544 | KL: 29.7747
+Epoch 83/200:
+--------
+Negative ELBO: 208.5943 | Recon Loss: 191.1871 | KL: 29.8069
+Epoch 84/200:
+--------
+Negative ELBO: 208.8075 | Recon Loss: 191.1745 | KL: 29.7853
+Epoch 85/200:
+--------
+Negative ELBO: 209.0974 | Recon Loss: 191.3460 | KL: 29.5857
+Negative ELBO: 208.6491 | Recon Loss: 190.9118 | KL: 29.5622
+Epoch 86/200:
+--------
+Negative ELBO: 209.1827 | Recon Loss: 191.2414 | KL: 29.5087
+Epoch 87/200:
+--------
+Negative ELBO: 209.3802 | Recon Loss: 191.1952 | KL: 29.5211
+Epoch 88/200:
+--------
+Negative ELBO: 209.5906 | Recon Loss: 191.2244 | KL: 29.4330
+Epoch 89/200:
+--------
+Negative ELBO: 209.8081 | Recon Loss: 191.2329 | KL: 29.3911
+Epoch 90/200:
+--------
+Negative ELBO: 209.9523 | Recon Loss: 191.0961 | KL: 29.4629
+Negative ELBO: 209.7418 | Recon Loss: 190.9154 | KL: 29.4163
+Epoch 91/200:
+--------
+Negative ELBO: 210.1706 | Recon Loss: 191.1478 | KL: 29.3562
+Epoch 92/200:
+--------
+Negative ELBO: 210.4525 | Recon Loss: 191.1301 | KL: 29.4549
+Epoch 93/200:
+--------
+Negative ELBO: 210.5863 | Recon Loss: 191.0514 | KL: 29.4201
+Epoch 94/200:
+--------
+Negative ELBO: 210.9406 | Recon Loss: 191.1589 | KL: 29.4370
+Epoch 95/200:
+--------
+Negative ELBO: 211.1835 | Recon Loss: 191.2156 | KL: 29.3646
+Negative ELBO: 210.9237 | Recon Loss: 190.9038 | KL: 29.4411
+Epoch 96/200:
+--------
+Negative ELBO: 211.2372 | Recon Loss: 191.0996 | KL: 29.2698
+Epoch 97/200:
+--------
+Negative ELBO: 211.4664 | Recon Loss: 191.0976 | KL: 29.2656
+Epoch 98/200:
+--------
+Negative ELBO: 211.8123 | Recon Loss: 191.2134 | KL: 29.2598
+Epoch 99/200:
+--------
+Negative ELBO: 211.8396 | Recon Loss: 191.3419 | KL: 28.7889
+Epoch 100/200:
+--------
+Negative ELBO: 211.9274 | Recon Loss: 191.4746 | KL: 28.4067
+Negative ELBO: 211.7104 | Recon Loss: 191.1461 | KL: 28.5614
+Epoch 101/200:
+--------
+Negative ELBO: 211.9928 | Recon Loss: 191.2663 | KL: 28.4705
+Epoch 102/200:
+--------
+Negative ELBO: 212.2391 | Recon Loss: 191.2920 | KL: 28.4607
+Epoch 103/200:
+--------
+Negative ELBO: 212.5303 | Recon Loss: 191.2862 | KL: 28.5539
+Epoch 104/200:
+--------
+Negative ELBO: 212.8411 | Recon Loss: 191.2975 | KL: 28.6484
+Epoch 105/200:
+--------
+Negative ELBO: 213.0374 | Recon Loss: 191.3573 | KL: 28.5264
+Negative ELBO: 212.7865 | Recon Loss: 190.9072 | KL: 28.7885
+Epoch 106/200:
+--------
+Negative ELBO: 213.1986 | Recon Loss: 191.2398 | KL: 28.5922
+Epoch 107/200:
+--------
+Negative ELBO: 213.3775 | Recon Loss: 191.2707 | KL: 28.4882
+Epoch 108/200:
+--------
+Negative ELBO: 213.4194 | Recon Loss: 191.1920 | KL: 28.3513
+Epoch 109/200:
+--------
+Negative ELBO: 213.6831 | Recon Loss: 191.2555 | KL: 28.3176
+Epoch 110/200:
+--------
+Negative ELBO: 213.7577 | Recon Loss: 191.3537 | KL: 28.0049
+Negative ELBO: 213.5570 | Recon Loss: 191.1269 | KL: 28.0376
+Epoch 111/200:
+--------
+Negative ELBO: 213.6426 | Recon Loss: 191.2965 | KL: 27.9327
+Epoch 112/200:
+--------
+Negative ELBO: 213.4429 | Recon Loss: 191.2063 | KL: 27.7958
+Epoch 113/200:
+--------
+Negative ELBO: 213.5914 | Recon Loss: 191.2310 | KL: 27.9505
+Epoch 114/200:
+--------
+Negative ELBO: 213.3559 | Recon Loss: 191.2279 | KL: 27.6599
+Epoch 115/200:
+--------
+Negative ELBO: 213.3105 | Recon Loss: 191.2421 | KL: 27.5855
+Negative ELBO: 213.3280 | Recon Loss: 191.0659 | KL: 27.8276
+Epoch 116/200:
+--------
+Negative ELBO: 213.2774 | Recon Loss: 191.1566 | KL: 27.6510
+Epoch 117/200:
+--------
+Negative ELBO: 213.2453 | Recon Loss: 191.3493 | KL: 27.3701
+Epoch 118/200:
+--------
+Negative ELBO: 213.3067 | Recon Loss: 191.2678 | KL: 27.5487
+Epoch 119/200:
+--------
+Negative ELBO: 213.2507 | Recon Loss: 191.2508 | KL: 27.4998
+Epoch 120/200:
+--------
+Negative ELBO: 213.2776 | Recon Loss: 191.1109 | KL: 27.7083
+Negative ELBO: 213.4289 | Recon Loss: 190.9637 | KL: 28.0815
+Epoch 121/200:
+--------
+Negative ELBO: 213.3124 | Recon Loss: 191.0516 | KL: 27.8260
+Epoch 122/200:
+--------
+Negative ELBO: 213.3699 | Recon Loss: 191.0384 | KL: 27.9143
+Epoch 123/200:
+--------
+Negative ELBO: 213.3690 | Recon Loss: 191.1065 | KL: 27.8282
+Epoch 124/200:
+--------
+Negative ELBO: 213.4525 | Recon Loss: 191.2399 | KL: 27.7657
+Epoch 125/200:
+--------
+Negative ELBO: 213.3838 | Recon Loss: 191.2150 | KL: 27.7110
+Negative ELBO: 213.5442 | Recon Loss: 191.2311 | KL: 27.8914
+Epoch 126/200:
+--------
+Negative ELBO: 213.3137 | Recon Loss: 191.1672 | KL: 27.6832
+Epoch 127/200:
+--------
+Negative ELBO: 213.1585 | Recon Loss: 191.0982 | KL: 27.5754
+Epoch 128/200:
+--------
+Negative ELBO: 213.0975 | Recon Loss: 191.0847 | KL: 27.5160
+Epoch 129/200:
+--------
+Negative ELBO: 213.2616 | Recon Loss: 191.1900 | KL: 27.5896
+Epoch 130/200:
+--------
+Negative ELBO: 213.2006 | Recon Loss: 191.2076 | KL: 27.4912
+Negative ELBO: 213.0142 | Recon Loss: 190.9302 | KL: 27.6050
+Epoch 131/200:
+--------
+Negative ELBO: 213.1902 | Recon Loss: 191.2452 | KL: 27.4312
+Epoch 132/200:
+--------
+Negative ELBO: 212.9916 | Recon Loss: 191.2224 | KL: 27.2114
+Epoch 133/200:
+--------
+Negative ELBO: 213.0492 | Recon Loss: 191.2748 | KL: 27.2180
+Epoch 134/200:
+--------
+Negative ELBO: 212.8924 | Recon Loss: 191.1574 | KL: 27.1688
+Epoch 135/200:
+--------
+Negative ELBO: 213.0249 | Recon Loss: 191.2047 | KL: 27.2752
+Negative ELBO: 213.0394 | Recon Loss: 191.1773 | KL: 27.3276
+Epoch 136/200:
+--------
+Negative ELBO: 213.0933 | Recon Loss: 191.1966 | KL: 27.3708
+Epoch 137/200:
+--------
+Negative ELBO: 213.1356 | Recon Loss: 191.2236 | KL: 27.3901
+Epoch 138/200:
+--------
+Negative ELBO: 213.0199 | Recon Loss: 191.1024 | KL: 27.3968
+Epoch 139/200:
+--------
+Negative ELBO: 213.0978 | Recon Loss: 191.1877 | KL: 27.3877
+Epoch 140/200:
+--------
+Negative ELBO: 213.1019 | Recon Loss: 191.0589 | KL: 27.5539
+Negative ELBO: 213.1999 | Recon Loss: 190.8916 | KL: 27.8853
+Epoch 141/200:
+--------
+Negative ELBO: 213.1374 | Recon Loss: 191.1628 | KL: 27.4682
+Epoch 142/200:
+--------
+Negative ELBO: 213.0073 | Recon Loss: 191.0078 | KL: 27.4993
+Epoch 143/200:
+--------
+Negative ELBO: 213.2240 | Recon Loss: 191.1291 | KL: 27.6186
+Epoch 144/200:
+--------
+Negative ELBO: 213.1204 | Recon Loss: 191.0918 | KL: 27.5357
+Epoch 145/200:
+--------
+Negative ELBO: 213.0572 | Recon Loss: 191.1060 | KL: 27.4391
+Negative ELBO: 212.8645 | Recon Loss: 190.6612 | KL: 27.7541
+Epoch 146/200:
+--------
+Negative ELBO: 213.0823 | Recon Loss: 191.1609 | KL: 27.4018
+Epoch 147/200:
+--------
+Negative ELBO: 213.0779 | Recon Loss: 191.0583 | KL: 27.5246
+Epoch 148/200:
+--------
+Negative ELBO: 212.9753 | Recon Loss: 190.9843 | KL: 27.4887
+Epoch 149/200:
+--------
+Negative ELBO: 212.9108 | Recon Loss: 191.0319 | KL: 27.3486
+Epoch 150/200:
+--------
+Negative ELBO: 213.0035 | Recon Loss: 191.1790 | KL: 27.2807
+Negative ELBO: 212.9315 | Recon Loss: 190.9497 | KL: 27.4773
+Epoch 151/200:
+--------
+Negative ELBO: 213.0583 | Recon Loss: 191.1736 | KL: 27.3559
+Epoch 152/200:
+--------
+Negative ELBO: 213.1520 | Recon Loss: 191.2438 | KL: 27.3852
+Epoch 153/200:
+--------
+Negative ELBO: 213.1409 | Recon Loss: 191.0783 | KL: 27.5783
+Epoch 154/200:
+--------
+Negative ELBO: 212.9743 | Recon Loss: 191.1103 | KL: 27.3299
+Epoch 155/200:
+--------
+Negative ELBO: 213.0113 | Recon Loss: 191.1575 | KL: 27.3173
+Negative ELBO: 213.0330 | Recon Loss: 190.8585 | KL: 27.7181
+Epoch 156/200:
+--------
+Negative ELBO: 213.0743 | Recon Loss: 191.1173 | KL: 27.4463
+Epoch 157/200:
+--------
+Negative ELBO: 212.8741 | Recon Loss: 191.3666 | KL: 26.8844
+Epoch 158/200:
+--------
+Negative ELBO: 212.8113 | Recon Loss: 191.3400 | KL: 26.8390
+Epoch 159/200:
+--------
+Negative ELBO: 212.7885 | Recon Loss: 191.5236 | KL: 26.5811
+Epoch 160/200:
+--------
+Negative ELBO: 212.7580 | Recon Loss: 191.4220 | KL: 26.6700
+Negative ELBO: 212.7382 | Recon Loss: 191.0928 | KL: 27.0567
+Epoch 161/200:
+--------
+Negative ELBO: 212.7876 | Recon Loss: 191.3049 | KL: 26.8534
+Epoch 162/200:
+--------
+Negative ELBO: 212.7403 | Recon Loss: 191.1725 | KL: 26.9598
+Epoch 163/200:
+--------
+Negative ELBO: 212.7499 | Recon Loss: 191.1939 | KL: 26.9450
+Epoch 164/200:
+--------
+Negative ELBO: 212.8385 | Recon Loss: 191.2316 | KL: 27.0087
+Epoch 165/200:
+--------
+Negative ELBO: 212.9719 | Recon Loss: 191.0747 | KL: 27.3716
+Negative ELBO: 212.7401 | Recon Loss: 190.6434 | KL: 27.6209
+Epoch 166/200:
+--------
+Negative ELBO: 213.0639 | Recon Loss: 191.1195 | KL: 27.4305
+Epoch 167/200:
+--------
+Negative ELBO: 212.9643 | Recon Loss: 191.1212 | KL: 27.3038
+Epoch 168/200:
+--------
+Negative ELBO: 213.0222 | Recon Loss: 191.0842 | KL: 27.4225
+Epoch 169/200:
+--------
+Negative ELBO: 213.0258 | Recon Loss: 191.2250 | KL: 27.2510
+Epoch 170/200:
+--------
+Negative ELBO: 212.9206 | Recon Loss: 191.1121 | KL: 27.2606
+Negative ELBO: 212.8997 | Recon Loss: 191.0204 | KL: 27.3491
+Epoch 171/200:
+--------
+Negative ELBO: 212.9257 | Recon Loss: 191.2036 | KL: 27.1526
+Epoch 172/200:
+--------
+Negative ELBO: 212.9694 | Recon Loss: 191.0899 | KL: 27.3495
+Epoch 173/200:
+--------
+Negative ELBO: 213.1188 | Recon Loss: 190.9586 | KL: 27.7003
+Epoch 174/200:
+--------
+Negative ELBO: 213.0891 | Recon Loss: 190.9760 | KL: 27.6414
+Epoch 175/200:
+--------
+Negative ELBO: 213.2478 | Recon Loss: 191.1462 | KL: 27.6270
+Negative ELBO: 212.9196 | Recon Loss: 190.6386 | KL: 27.8513
+Epoch 176/200:
+--------
+Negative ELBO: 213.1630 | Recon Loss: 191.0351 | KL: 27.6598
+Epoch 177/200:
+--------
+Negative ELBO: 213.0645 | Recon Loss: 191.0788 | KL: 27.4822
+Epoch 178/200:
+--------
+Negative ELBO: 213.1157 | Recon Loss: 191.1810 | KL: 27.4184
+Epoch 179/200:
+--------
+Negative ELBO: 213.0657 | Recon Loss: 191.2155 | KL: 27.3128
+Epoch 180/200:
+--------
+Negative ELBO: 213.0511 | Recon Loss: 191.2246 | KL: 27.2832
+Negative ELBO: 212.8318 | Recon Loss: 190.9120 | KL: 27.3997
+Epoch 181/200:
+--------
+Negative ELBO: 213.0377 | Recon Loss: 191.2339 | KL: 27.2548
+Epoch 182/200:
+--------
+Negative ELBO: 212.9145 | Recon Loss: 191.1314 | KL: 27.2289
+Epoch 183/200:
+--------
+Negative ELBO: 212.9382 | Recon Loss: 191.1241 | KL: 27.2677
+Epoch 184/200:
+--------
+Negative ELBO: 212.9342 | Recon Loss: 191.1657 | KL: 27.2107
+Epoch 185/200:
+--------
+Negative ELBO: 212.9451 | Recon Loss: 191.1871 | KL: 27.1976
+Negative ELBO: 212.6932 | Recon Loss: 190.8403 | KL: 27.3161
+Epoch 186/200:
+--------
+Negative ELBO: 212.9252 | Recon Loss: 191.1843 | KL: 27.1762
+Epoch 187/200:
+--------
+Negative ELBO: 212.9740 | Recon Loss: 191.1302 | KL: 27.3048
+Epoch 188/200:
+--------
+Negative ELBO: 212.9603 | Recon Loss: 191.0616 | KL: 27.3733
+Epoch 189/200:
+--------
+Negative ELBO: 212.9753 | Recon Loss: 191.0740 | KL: 27.3767
+Epoch 190/200:
+--------
+Negative ELBO: 213.0230 | Recon Loss: 191.1924 | KL: 27.2883
+Negative ELBO: 212.7363 | Recon Loss: 190.7471 | KL: 27.4865
+Epoch 191/200:
+--------
+Negative ELBO: 213.0132 | Recon Loss: 191.2010 | KL: 27.2653
+Epoch 192/200:
+--------
+Negative ELBO: 213.1637 | Recon Loss: 191.3812 | KL: 27.2281
+Epoch 193/200:
+--------
+Negative ELBO: 213.0690 | Recon Loss: 191.2668 | KL: 27.2527
+Epoch 194/200:
+--------
+Negative ELBO: 213.0872 | Recon Loss: 191.2517 | KL: 27.2944
+Epoch 195/200:
+--------
+Negative ELBO: 213.0440 | Recon Loss: 191.1655 | KL: 27.3481
+Negative ELBO: 212.9843 | Recon Loss: 190.9335 | KL: 27.5635
+Epoch 196/200:
+--------
+Negative ELBO: 213.0027 | Recon Loss: 191.1041 | KL: 27.3732
+Epoch 197/200:
+--------
+Negative ELBO: 213.1499 | Recon Loss: 191.3091 | KL: 27.3011
+Epoch 198/200:
+--------
+Negative ELBO: 213.0230 | Recon Loss: 191.1959 | KL: 27.2839
+Epoch 199/200:
+--------
+Negative ELBO: 213.0715 | Recon Loss: 191.3492 | KL: 27.1528
+<IPython.core.display.Image object>
+[2K[2K-------------
+Test Results:
+Negative ELBO: 212.7555 | Recon Loss: 190.8765 | KL: 27.3487
+Estimated NLL (Monte Carlo, K=500): 213.2483
+Traceback (most recent call last):
+  File "/zhome/7f/5/168608/CCVAE/GMVAE/CCVAE_new_script.py", line 733, in <module>
+    generate_plots(model, test_loader)
+  File "/zhome/7f/5/168608/CCVAE/GMVAE/CCVAE_new_script.py", line 692, in generate_plots
+    plt.savefig(f"plots/cc_{model.latent_dim}_tSNE.svg", format="svg", bbox_inches='tight')
+  File "/zhome/7f/5/168608/DLenv/lib64/python3.9/site-packages/matplotlib/pyplot.py", line 1228, in savefig
+    res = fig.savefig(*args, **kwargs)  # type: ignore[func-returns-value]
+  File "/zhome/7f/5/168608/DLenv/lib64/python3.9/site-packages/matplotlib/figure.py", line 3395, in savefig
+    self.canvas.print_figure(fname, **kwargs)
+  File "/zhome/7f/5/168608/DLenv/lib64/python3.9/site-packages/matplotlib/backend_bases.py", line 2204, in print_figure
+    result = print_method(
+  File "/zhome/7f/5/168608/DLenv/lib64/python3.9/site-packages/matplotlib/backend_bases.py", line 2054, in <lambda>
+    print_method = functools.wraps(meth)(lambda *args, **kwargs: meth(
+  File "/zhome/7f/5/168608/DLenv/lib64/python3.9/site-packages/matplotlib/backends/backend_svg.py", line 1328, in print_svg
+    with cbook.open_file_cm(filename, "w", encoding="utf-8") as fh:
+  File "/zhome/7f/5/168608/DLenv/lib64/python3.9/site-packages/matplotlib/cbook.py", line 497, in open_file_cm
+    fh, opened = to_filehandle(path_or_file, mode, True, encoding)
+  File "/zhome/7f/5/168608/DLenv/lib64/python3.9/site-packages/matplotlib/cbook.py", line 483, in to_filehandle
+    fh = open(fname, flag, encoding=encoding)
+FileNotFoundError: [Errno 2] No such file or directory: 'plots/cc_7_tSNE.svg'

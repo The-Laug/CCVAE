@@ -23,9 +23,10 @@ from compare import save_performance
 # --- CONSOLIDATED EPSILON ---
 EPS = 1e-6 
 
+learning_rate = 1e-4
+hidden_dim = 1024
+numbers = 10
 NUM_EPOCHS = 200
-learning_rate = 1e-3
-hidden_dim = 500
 #take learning rate and hidden dim from command line input
 
 if len(sys.argv) > 1:
@@ -34,6 +35,8 @@ if len(sys.argv) > 2:
     hidden_dim = int(sys.argv[2])
 if len(sys.argv) > 3:
     numbers = int(sys.argv[3])
+if len(sys.argv) > 4:
+    NUM_EPOCHS = int(sys.argv[4])
 
 
 # ======================================================================
@@ -202,6 +205,24 @@ class MLPEncoder(nn.Module):
             nn.BatchNorm1d(hidden_dims),
             # nn.ReLU(),
             
+            nn.Linear(hidden_dims, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
+            nn.Dropout(0.2),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
+            nn.Dropout(0.2),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Linear(64, hidden_dims),
+            nn.BatchNorm1d(hidden_dims),
+            nn.ReLU(),
+            
             nn.Linear(hidden_dims, latent_dim)
         )
 
@@ -213,6 +234,22 @@ class BernoulliDecoder(nn.Module):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(latent_dim, hidden_dims, bias=False), 
+            # nn.BatchNorm1d(hidden_dims),
+            #create multiple layers for decoder
+            nn.ReLU(),
+            nn.Linear(hidden_dims, 512, bias=False),
+            # nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Linear(512, 256, bias=False),
+            # nn.BatchNorm1d(256),
+            nn.ReLU(),
+            nn.Linear(256, 128, bias=False),
+            # nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Linear(128, 64, bias=False),
+            # nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Linear(64, hidden_dims, bias=False),
             # nn.BatchNorm1d(hidden_dims),
             nn.ReLU(),
             nn.Linear(hidden_dims, output_dim, bias=False)
@@ -536,7 +573,6 @@ if __name__ == "__main__":
 
     print("Current device:", device)
     print(f"Using learning rate: {learning_rate}, hidden dim: {hidden_dim}")
-
     # Simple binarization transform
     transform = T.Compose([
     T.ToTensor(), 
@@ -561,30 +597,31 @@ if __name__ == "__main__":
     input_dim = 28 * 28
     latent_dim = len(nums)
     
-    print(f"Training CCVAE with latent dim: {latent_dim}")
-    print(f"used numbers: {nums}")
-    print(f"epochs : {NUM_EPOCHS}")
     model = CCVAE(input_dim=input_dim,
                   enc_hidden_dims=hidden_dim,
                   dec_hidden_dims=hidden_dim,
                   latent_dim=latent_dim).to(device)
 
     vi = VariationalInference(
-        zero_beta_epochs = 20,
-        base_beta=0.1, 
-        warmup_epochs=40, # Matches setting from train_from_scratch
+        zero_beta_epochs = 10,
+        base_beta=0.8, 
+        warmup_epochs=100, # Matches setting from train_from_scratch
         max_beta=1.0, 
         C_free=2.0        # Matches setting from train_from_scratch (Free-Bits)
     ).to(device)
 
-    
-    test_name = f"hyperparam_test_lr_{learning_rate}_hd_{hidden_dim}"  # Set to None to train from scratch without loading/saving
-    skip_load = False # if true, do not load a model
+    test_name = f"hyperparam_test_lr_{learning_rate}_hd_{hidden_dim}_bzero_{vi.zero_beta_epochs}_bbase_{vi.base_beta}_vwarmup_{vi.warmup_epochs}_bmax_{vi.max_beta}_bCfree_{vi.C_free}"  # Set to None to train from scratch without loading/saving
+    skip_load = True # if true, do not load a model
 
     loss_data = []
     recon_data = []
     kl_data = []
 
+    print(f"Training CCVAE with latent dim: {latent_dim}")
+    print(f"used numbers: {nums}")
+    print(f"epochs : {NUM_EPOCHS}")
+    print(f"Number of parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+    print(f"beta variables: zero_beta_epochs={vi.zero_beta_epochs}, base_beta={vi.base_beta}, warmup_epochs={vi.warmup_epochs}, max_beta={vi.max_beta}, C_free={vi.C_free}")
     # Check if trained model exists
     if test_name != None:
         if not skip_load and os.path.exists(f"saves/CCVAE/{test_name}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth"):

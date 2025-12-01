@@ -3,8 +3,8 @@
 # -----------------------------
 # Hyperparameters to sweep
 # -----------------------------
-learning_rates=(1e-3 5e-4 1e-4)
-hidden_dims=(256 512 1024)
+learning_rates=(1e-4)
+hidden_dims=( 1024 )
 numbers=(10)
 
 # -----------------------------
@@ -31,7 +31,7 @@ for lr in "${learning_rates[@]}"; do
             echo "Launching run: lr=$lr  hidden_dim=$hd  numbers=$num"
 
             # Run Python training script in background
-            python /zhome/7f/5/168608/CCVAE/GMVAE/CCVAE_new_script.py "$lr" "$hd" "$num" > "/zhome/7f/5/168608/CCVAE/GMVAE/logs/run_lr${lr}_hd${hd}_num${num}.log" 2>&1 &
+            python /zhome/7f/5/168608/CCVAE/GMVAE/CCVAE_new_script.py "$lr" "$hd" "$num" 3000 > "/zhome/7f/5/168608/CCVAE/GMVAE/logs/run_lr${lr}_hd${hd}_num${num}.log" 2>&1 &
 
             # Enforce parallel job limit
             wait_for_jobs
