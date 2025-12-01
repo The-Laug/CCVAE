@@ -20,7 +20,7 @@ import random
 
 # --- CONSOLIDATED EPSILON ---
 EPS = 1e-6
-NUM_EPOCHS = 10
+NUM_EPOCHS = 50
 learning_rate = 5e-4
 hidden_dim = 500
 
@@ -663,9 +663,9 @@ if __name__ == "__main__":
                   latent_dim=latent_dim).to(device)
 
     vi = VariationalInference(
-            zero_beta_epochs = 20,
+            zero_beta_epochs = 10,
             base_beta=1.0, 
-            warmup_epochs=100,
+            warmup_epochs=20,
             max_beta=1.0,
         ).to(device)
     
