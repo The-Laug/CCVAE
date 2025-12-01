@@ -21,7 +21,7 @@ import random
 # --- CONSOLIDATED EPSILON ---
 limit = 8
 EPS = 1e-6 
-NUM_EPOCHS = 200
+NUM_EPOCHS = 10
 learning_rate = 5e-4
 hidden_dim = 500
 #take learning rate and hidden dim from command line input
@@ -632,6 +632,7 @@ if __name__ == "__main__":
 
     path = f"saves/CCVAE/ordered/{test_name}"
     performance_path = f"saves/CCVAE/ordered/{test_name}/performance"
+    plots_path =  f"saves/CCVAE/ordered/{test_name}/plots"
 
     # Check if trained model exists
     if not skip_load and os.path.exists(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth"): # If skip load is false and the model exists
@@ -639,9 +640,12 @@ if __name__ == "__main__":
             model.load_state_dict(torch.load(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth", weights_only=True, map_location=device))
     else:
         if not os.path.exists(path):
-                os.mkdir(path)
+                os.makedirs(path, exist_ok=True)
         if not os.path.exists(performance_path):
-            os.mkdir(performance_path)
+            os.makedirs(performance_path, exist_ok = True)
+        
+        if not os.path.exists(plots_path):
+            os.makedirs(plots_path, exist_ok = True)
 
         model = train_from_scratch(model, vi, train_loader, test_loader, device)
         save_performance(f'{performance_path}/performance_e_{NUM_EPOCHS}_ld_{latent_dim}', loss_data, recon_data, kl_data)
@@ -695,7 +699,7 @@ def generate_plots(model: CCVAE, test_loader, single_graph=None):
         plot_latents(ax, zs, ys, model.latent_dim)   # <-- use the correct plot function
         plt.xticks([]) # remove tick labels
         plt.yticks([]) 
-        plt.savefig(f"plots/cc_{model.latent_dim}_tSNE.svg", format="svg", bbox_inches='tight')
+        plt.savefig(f"{plots_path}/cc_{model.latent_dim}_tSNE.svg", format="svg", bbox_inches='tight')
         #plt.show()
 
     # 2. Generate MDS plot
@@ -705,14 +709,14 @@ def generate_plots(model: CCVAE, test_loader, single_graph=None):
         plot_mds(ax, zs, ys, model.latent_dim)
         plt.xticks([]) # remove tick labels
         plt.yticks([]) 
-        plt.savefig(f"plots/cc_{model.latent_dim}_MDS.svg", format="svg", bbox_inches='tight')
+        plt.savefig(f"{plots_path}/cc_{model.latent_dim}_MDS.svg", format="svg", bbox_inches='tight')
         #plt.show()
 
     # 3. Plot one-hot latent value encoding
     if single_graph == None or single_graph == 'OH':
         fig, ax = plt.subplots()
         plot_latent_dim_wise_reconstruct(ax, model, model.latent_dim, device)
-        plt.savefig(f"plots/cc_{model.latent_dim}_one-hot-latent-encoding.png", format="png", bbox_inches='tight')
+        plt.savefig(f"{plots_path}/cc_{model.latent_dim}_one-hot-latent-encoding.png", format="png", bbox_inches='tight')
         #plt.show()
 
     # 4. Plot simplex visualization
@@ -734,7 +738,7 @@ def generate_plots(model: CCVAE, test_loader, single_graph=None):
         ax.axis('off')
         plot_mnist_simplex(latent_matrix, labels, latent_dim, ax=ax)
         plt.tight_layout()
-        plt.savefig(f"plots/cc_{model.latent_dim}_simplex.svg", format="svg", bbox_inches='tight')
+        plt.savefig(f"{plots_path}/cc_{model.latent_dim}_simplex.svg", format="svg", bbox_inches='tight')
         #plt.show()
 
 generate_plots(model, test_loader)
