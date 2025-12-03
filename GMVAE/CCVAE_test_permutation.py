@@ -19,11 +19,13 @@ from compare import save_performance
 import random
 
 # --- CONSOLIDATED EPSILON ---
-limit = 8
+limit = 10
 EPS = 1e-6
-NUM_EPOCHS = 200
+NUM_EPOCHS = 400
 learning_rate = 5e-4
 hidden_dim = 500
+total_iterations = 0
+total_attempts = 50000
 
 if len(sys.argv) > 1:
     learning_rate = float(sys.argv[1])
@@ -46,235 +48,194 @@ def set_seed(seed):
     torch.backends.cudnn.benchmark = False
     print(f"Random Seed set to: {seed}")
 
+
 # ======================================================================
-#  HELPER FUNCTIONS (Continuous Categorical Distribution)
+#  HELPER FUNCTIONS
 # ======================================================================
 
 def inv_cdf_torch(u, l):
     """
     Inverse CDF of the continuous Bernoulli distribution.
-    
-    CRITICAL FIX: This version prevents NaN generation in the backward pass 
-    by ensuring the denominator in the calculation branch is never zero,
-    even though that branch is masked out by torch.where.
+    CRITICAL FIX: This version prevents NaN generation.
     """
     u = u.clamp(EPS, 1 - EPS)
     l = l.clamp(EPS, 1 - EPS)
     
-    # 1. Identify the singularity at 0.5
     mask_near_half = (l > 0.499) & (l < 0.501)
-    
-    # 2. Create a "calculation-safe" lambda.
-    # We replace 0.5 with 0.45 (arbitrary) in the calculation path.
-    # This prevents division by zero (log(0.5) - log(0.5) = 0).
-    # The result for these elements will be discarded by torch.where anyway.
     l_calc = torch.where(mask_near_half, torch.full_like(l, 0.45), l)
     
-    # 3. Compute Inverse CDF on the safe tensor
-    # Numerator: log(u * (2l - 1) + 1 - l) - log(1 - l)
     term_inner = u * (2 * l_calc - 1) + 1 - l_calc
-    term_inner = term_inner.clamp(min=EPS) # Ensure positive for log
+    term_inner = term_inner.clamp(min=EPS) 
     
     num = torch.log(term_inner) - torch.log(1 - l_calc)
     den = torch.log(l_calc) - torch.log(1 - l_calc)
     
     x = num / den
-    
-    # 4. Select: u if near 0.5, calculated x otherwise
     return torch.where(mask_near_half, u, x)
 
 
-def sample_cc_permutation(lam, max_attempts=50, verbose=False):
+def sample_cc_hybrid(lam, stage1_attempts=20, stage2_attempts=7500, verbose=False):
     """
-    Robust Permutation Sampler with Statistics Tracking.
-    Stage 2 uses the Optimized Ordered Rejection Sampler (Sort Once).
+    Optimized Smart Hybrid Sampler.
+    Automatically switches strategy based on confidence (heuristic).
     """
+    global total_iterations
     B, K = lam.shape
     device = lam.device
     dtype = lam.dtype
     
     final_x = torch.zeros_like(lam)
-    active_mask = torch.ones(B, dtype=torch.bool, device=device)
     
-    # Track initial count
-    total_batch_size = B
+    # --- HEURISTIC ROUTING ---
+    # If max probability > 2.0/K, skip Stage 1 (Permutation)
+    heuristic_threshold = 4.0 / K
+    is_unbalanced = lam.max(dim=1).values > heuristic_threshold
     
-    K_minus_1 = K - 1
+    # Only "Balanced" samples try Stage 1
+    active_mask_stage1 = ~is_unbalanced
+    global_active_mask = torch.ones(B, dtype=torch.bool, device=device)
     
     # --- STAGE 1: Permutation Sampler ---
-    permutation_attempts = 0
-    for _ in range(max_attempts):
-        if not active_mask.any():
-            break
+    perm_iters = 0
+    if active_mask_stage1.any():
+        K_minus_1 = K - 1
         
-        permutation_attempts += 1
+        # Fail Fast: limit attempts to 20
+        for _ in range(stage1_attempts):
+            if not active_mask_stage1.any():
+                break
+            perm_iters += 1
             
-        active_indices = torch.nonzero(active_mask).squeeze(-1)
-        lam_active = lam[active_indices]
-        current_B = lam_active.size(0)
-        
-        # 1. Lambda -> Eta
-        lam_active = lam_active.clamp(min=EPS, max=1.0)
-        eta = torch.log(lam_active[:, :-1] / (lam_active[:, -1].unsqueeze(1) + EPS))
-        
-        # 2. Eta Tilde
-        eta_diff = eta[:, :-1] - eta[:, 1:]
-        eta_last = eta[:, -1:]
-        eta_tilde = torch.cat([eta_diff, eta_last], dim=1)
-        
-        # 3. Proposal Sampling
-        u = torch.rand(current_B, K_minus_1, device=device, dtype=dtype)
-        l_cb = torch.sigmoid(eta_tilde)
-        y_prime = inv_cdf_torch(u, l_cb)
-        
-        # 4. Sort
-        y, indices = torch.sort(y_prime, dim=1)
-        
-        # 5. Acceptance Probability
-        term_1 = torch.sum(eta_tilde * (y - y_prime), dim=1)
-        
-        # Log Kappa
-        eta_tilde_d = eta_tilde.double()
-        eta_tilde_flip = eta_tilde_d.flip(dims=[1])
-        suffix_sum_eta = torch.cumsum(eta_tilde_flip, dim=1).flip(dims=[1])
-        zeros = torch.zeros(current_B, 1, device=device, dtype=torch.double)
-        suffix_sum_eta = torch.cat([suffix_sum_eta, zeros], dim=1)
-        
-        eta_gathered = torch.gather(eta_tilde_d, 1, indices)
-        eta_gathered_flip = eta_gathered.flip(dims=[1])
-        suffix_sum_gathered = torch.cumsum(eta_gathered_flip, dim=1).flip(dims=[1])
-        suffix_sum_gathered = torch.cat([suffix_sum_gathered, zeros], dim=1)
-        
-        diffs = suffix_sum_eta - suffix_sum_gathered
-        log_kappa, _ = torch.max(diffs, dim=1)
-        
-        log_alpha = term_1 - log_kappa.to(dtype)
-        
-        # 6. Accept/Reject
-        log_u_accept = torch.log(torch.rand(current_B, device=device, dtype=dtype) + EPS)
-        accepted_local = log_u_accept < log_alpha
-        
-        if accepted_local.any():
-            y_acc = y[accepted_local]
-            indices_acc = indices[accepted_local]
+            active_indices = torch.nonzero(active_mask_stage1).squeeze(-1)
+            lam_active = lam[active_indices]
+            current_B = lam_active.size(0)
             
-            y_padded = torch.cat([torch.zeros(y_acc.size(0), 1, device=device, dtype=dtype), y_acc], dim=1)
-            x_first_km1 = y_padded[:, 1:] - y_padded[:, :-1]
-            x_last = 1.0 - y_acc[:, -1:]
-            x_acc = torch.cat([x_first_km1, x_last], dim=1)
+            lam_active = lam_active.clamp(min=EPS, max=1.0)
+            eta = torch.log(lam_active[:, :-1] / (lam_active[:, -1].unsqueeze(1) + EPS))
             
-            N_acc = indices_acc.size(0)
-            pivot_index = torch.full((N_acc, 1), K_minus_1, device=device, dtype=indices_acc.dtype)
-            indices_full = torch.cat([indices_acc, pivot_index], dim=1) 
+            eta_diff = eta[:, :-1] - eta[:, 1:]
+            eta_last = eta[:, -1:]
+            eta_tilde = torch.cat([eta_diff, eta_last], dim=1)
+            
+            u = torch.rand(current_B, K_minus_1, device=device, dtype=dtype)
+            l_cb = torch.sigmoid(eta_tilde)
+            y_prime = inv_cdf_torch(u, l_cb)
+            
+            y, indices = torch.sort(y_prime, dim=1)
+            
+            term_1 = torch.sum(eta_tilde * (y - y_prime), dim=1)
+            
+            eta_tilde_d = eta_tilde.double()
+            eta_tilde_flip = eta_tilde_d.flip(dims=[1])
+            suffix_sum_eta = torch.cumsum(eta_tilde_flip, dim=1).flip(dims=[1])
+            zeros = torch.zeros(current_B, 1, device=device, dtype=torch.double)
+            suffix_sum_eta = torch.cat([suffix_sum_eta, zeros], dim=1)
+            
+            eta_gathered = torch.gather(eta_tilde_d, 1, indices)
+            eta_gathered_flip = eta_gathered.flip(dims=[1])
+            suffix_sum_gathered = torch.cumsum(eta_gathered_flip, dim=1).flip(dims=[1])
+            suffix_sum_gathered = torch.cat([suffix_sum_gathered, zeros], dim=1)
+            
+            diffs = suffix_sum_eta - suffix_sum_gathered
+            log_kappa, _ = torch.max(diffs, dim=1)
+            log_alpha = term_1 - log_kappa.to(dtype)
+            
+            log_u_accept = torch.log(torch.rand(current_B, device=device, dtype=dtype) + EPS)
+            accepted_local = log_u_accept < log_alpha
+            
+            if accepted_local.any():
+                y_acc = y[accepted_local]
+                indices_acc = indices[accepted_local]
+                
+                y_padded = torch.cat([torch.zeros(y_acc.size(0), 1, device=device, dtype=dtype), y_acc], dim=1)
+                x_first_km1 = y_padded[:, 1:] - y_padded[:, :-1]
+                x_last = 1.0 - y_acc[:, -1:]
+                x_acc = torch.cat([x_first_km1, x_last], dim=1)
+                
+                N_acc = indices_acc.size(0)
+                pivot_index = torch.full((N_acc, 1), K_minus_1, device=device, dtype=indices_acc.dtype)
+                indices_full = torch.cat([indices_acc, pivot_index], dim=1) 
+                
+                final_x_local = torch.zeros_like(x_acc)
+                final_x_local.scatter_(1, indices_full, x_acc)
+                
+                accepted_global_indices = active_indices[accepted_local]
+                final_x[accepted_global_indices] = final_x_local
+                
+                active_mask_stage1 = active_mask_stage1.clone()
+                active_mask_stage1[accepted_global_indices] = False
+                
+                global_active_mask = global_active_mask.clone()
+                global_active_mask[accepted_global_indices] = False
 
-            final_x_local = torch.zeros_like(x_acc)
-            final_x_local.scatter_(1, indices_full, x_acc)
-            
-            accepted_global_indices = active_indices[accepted_local]
-            final_x[accepted_global_indices] = final_x_local
-            
-            active_mask = active_mask.clone()
-            active_mask[accepted_global_indices] = False
+    # Stats: How many did Stage 1 handle?
+    count_stage_1 = B - global_active_mask.sum().item()
 
-    # Stats after Stage 1
-    remaining_after_stage_1 = active_mask.sum().item()
-    count_stage_1 = total_batch_size - remaining_after_stage_1
-
-    # --- STAGE 2: Fallback (Ordered Sampler - Optimized) ---
-    ordered_attempts = 0
-    if active_mask.any():
-        # 1. Isolate the subset that needs the fallback
-        stage2_global_indices = torch.nonzero(active_mask).squeeze(-1)
-        lam_stage2 = lam[stage2_global_indices]
+    # --- STAGE 2: Optimized Ordered Sampler ---
+    ordered_iters = 0
+    if global_active_mask.any():
+        stage2_indices = torch.nonzero(global_active_mask).squeeze(-1)
+        lam_stage2 = lam[stage2_indices]
         B_stage2 = lam_stage2.size(0)
         
-        # [cite_start]2. Sort ONCE [cite: 166]
-        # This is the optimization: we sort the fallback batch only once.
+        # Sort ONCE
         lam_sorted, sort_indices = torch.sort(lam_stage2, dim=1, descending=True)
         lam_1 = lam_sorted[:, 0].unsqueeze(1)
         lam_rest = lam_sorted[:, 1:]
-        
-        # 3. Pre-calculate parameters
         cb_params = lam_rest / (lam_rest + lam_1 + EPS)
         
-        # 4. Local storage for results (on the sorted basis)
         x_rest_stage2 = torch.zeros(B_stage2, K-1, device=device, dtype=dtype)
-        
-        # 5. Local mask tracks which of the B_stage2 items are done
         mask_local = torch.ones(B_stage2, dtype=torch.bool, device=device)
         
-        # 6. Efficient Masked Loop
-        # We allow 50 attempts here to safely clear the "Valley of Death"
-        for _ in range(50): 
+        for _ in range(stage2_attempts):
             if not mask_local.any():
                 break
-            ordered_attempts += 1
+            ordered_iters += 1
             
-            # Select only parameters for currently active items
-            active_params = cb_params[mask_local]
             n_active = mask_local.sum()
-            
-            # Sample
+            active_params = cb_params[mask_local]
             u = torch.rand(n_active, K-1, device=device, dtype=dtype)
             x_cand = inv_cdf_torch(u, active_params)
             
-            # Check Sum Constraint
             sums = x_cand.sum(dim=1)
-            accepted = (sums <= 1.0 + 1e-4) # Tolerance included
+            accepted = (sums <= 1.0 + 1e-4)
             
             if accepted.any():
-                # Map accepted (subset) -> mask_local (active set) -> x_rest_stage2 (storage)
-                active_indices_local = torch.nonzero(mask_local).squeeze(-1)
-                accepted_indices_local = active_indices_local[accepted]
-                
-                x_rest_stage2[accepted_indices_local] = x_cand[accepted]
-                
+                active_loc = torch.nonzero(mask_local).squeeze(-1)
+                accepted_loc = active_loc[accepted]
+                x_rest_stage2[accepted_loc] = x_cand[accepted]
                 mask_local = mask_local.clone()
-                mask_local[accepted_indices_local] = False
-        
-        # 7. Reconstruction and Scatter (Global Update)
-        # Find which items in the local batch succeeded
-        succeeded_local_mask = ~mask_local
-        
-        if succeeded_local_mask.any():
-            # Get the partial results (K-1)
-            x_rest_success = x_rest_stage2[succeeded_local_mask]
-            
-            # [cite_start]Compute x_1 (slack variable) [cite: 176]
-            x_1 = (1.0 - x_rest_success.sum(dim=1, keepdim=True)).clamp(min=EPS)
-            x_sorted_success = torch.cat([x_1, x_rest_success], dim=1)
-            
-            # Unsort: Map sorted result back to original order
-            sort_indices_success = sort_indices[succeeded_local_mask]
-            x_stage2_success = torch.zeros_like(x_sorted_success)
-            x_stage2_success.scatter_(1, sort_indices_success, x_sorted_success)
-            
-            # Scatter to Global: Map local batch back to full batch
-            success_global_indices = stage2_global_indices[succeeded_local_mask]
-            final_x[success_global_indices] = x_stage2_success
-            
-            # Update Global Mask
-            active_mask = active_mask.clone()
-            active_mask[success_global_indices] = False
+                mask_local[accepted_loc] = False
                 
-    # Stats after Stage 2
-    remaining_final = active_mask.sum().item()
-    count_stage_2 = remaining_after_stage_1 - remaining_final
-    
-    # --- Final Failsafe ---
-    if active_mask.any():
-        final_x[active_mask] = lam[active_mask]
-        
-    # --- PRINTING STATS ---
-    if verbose:
-        pct_1 = (count_stage_1 / total_batch_size) * 100
-        pct_2 = (count_stage_2 / total_batch_size) * 100
-        pct_fail = (remaining_final / total_batch_size) * 100
-        
-        print(f"[Sampler] Stage 1 (Permutation): {pct_1:.1f}% ({permutation_attempts} iters) | "
-              f"Stage 2 (Ordered): {pct_2:.1f}% ({ordered_attempts} iters) | "
-              f"Deterministic: {pct_fail:.1f}%")
+        # Reconstruct Stage 2
+        succeeded_mask = ~mask_local
+        if succeeded_mask.any():
+            x_rest_success = x_rest_stage2[succeeded_mask]
+            x_1 = (1.0 - x_rest_success.sum(dim=1, keepdim=True)).clamp(min=EPS)
+            x_sorted = torch.cat([x_1, x_rest_success], dim=1)
+            
+            sort_idx_success = sort_indices[succeeded_mask]
+            x_final_stage2 = torch.zeros_like(x_sorted)
+            x_final_stage2.scatter_(1, sort_idx_success, x_sorted)
+            
+            success_global = stage2_indices[succeeded_mask]
+            final_x[success_global] = x_final_stage2
+            
+            global_active_mask = global_active_mask.clone()
+            global_active_mask[success_global] = False
 
+    # Stats logic
+    if verbose and total_iterations < total_attempts:
+        total_iterations += 1
+        fail = global_active_mask.sum().item()
+        s2_count = B - count_stage_1 - fail
+        print(f"[Sampler] Stage 1: {count_stage_1/B*100:.1f}% ({perm_iters} it) | "
+              f"Stage 2: {s2_count/B*100:.1f}% ({ordered_iters} it) | Fail: {fail}")
+
+    # Fail-safe
+    if global_active_mask.any():
+        final_x[global_active_mask] = lam[global_active_mask]
+        
     return final_x
 
 
@@ -413,7 +374,7 @@ class CCVAE(nn.Module):
         lam = F.softmax(lam_logits/tau, dim=1)
         
         # UPDATED: Use the Robust Permutation Sampler (Iterative + Fallback)
-        z = sample_cc_permutation(lam) 
+        z = sample_cc_hybrid(lam) 
 
         recon_logits = self.decoder(z)
         return recon_logits, lam, z
@@ -490,7 +451,7 @@ def montecarlo_nll(model, data_loader, device, K=500):
             lam_expanded = lam.repeat(K, 1) 
             
             # UPDATED: Use Permutation sampler here too
-            z = sample_cc_permutation(lam_expanded) 
+            z = sample_cc_hybrid(lam_expanded) 
 
             logits_dec = model.decoder(z) 
             x_expanded = x.repeat(K, 1)
@@ -601,12 +562,21 @@ def test_loop(model: 'CCVAE', vi: VariationalInference, test_loader, device):
 
 def train_from_scratch(model: 'CCVAE',vi:VariationalInference, train_loader, test_loader, device):
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+    # --- ADD SCHEDULER HERE ---
+    # T_max should match NUM_EPOCHS. eta_min is the lowest LR it will drop to.
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, 
+        T_max=NUM_EPOCHS, 
+        eta_min=1e-5)
+    
     #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5)
     for epoch in range(0, NUM_EPOCHS+1):
         model.current_epoch = epoch
         print(f"Epoch {epoch}/{NUM_EPOCHS}:")
         print("--------")
-        train_loop(model, vi, optimizer, train_loader, device) 
+        train_loop(model, vi, optimizer, train_loader, device)
+        scheduler.step()
         
         if epoch % 5 == 0:
             test_loop(model, vi, test_loader, device) 
@@ -659,8 +629,8 @@ if __name__ == "__main__":
 
     trainset = filter_mnist(trainset, keep=nums)
     testset = filter_mnist(testset, keep=nums)
-    train_loader = DataLoader(trainset, batch_size=128, shuffle=True, num_workers=0)
-    test_loader = DataLoader(testset, batch_size=128, shuffle=True, num_workers = 0)
+    train_loader = DataLoader(trainset, batch_size=32, shuffle=True, num_workers=0)
+    test_loader = DataLoader(testset, batch_size=32, shuffle=True, num_workers = 0)
 
     input_dim = 28 * 28
     
@@ -673,9 +643,9 @@ if __name__ == "__main__":
                   latent_dim=latent_dim).to(device)
 
     vi = VariationalInference(
-            zero_beta_epochs = 50,
+            zero_beta_epochs = 100,
             base_beta=1.0, 
-            warmup_epochs=75,
+            warmup_epochs=150,
             max_beta=1.0,
         ).to(device)
     
