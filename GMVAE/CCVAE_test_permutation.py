@@ -20,9 +20,9 @@ import random
 
 # --- CONSOLIDATED EPSILON ---
 EPS = 1e-6
-NUM_EPOCHS = 10
+NUM_EPOCHS = 50
 learning_rate = 5e-4
-hidden_dim = 500
+hidden_dim = 1024
 
 if len(sys.argv) > 1:
     learning_rate = float(sys.argv[1])
@@ -616,93 +616,7 @@ def train_from_scratch(model: 'CCVAE',vi:VariationalInference, train_loader, tes
                 )
     return model
 
-if __name__ == "__main__":
 
-    set_seed(42)
-
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    else:
-        device = torch.device("cpu")
-
-    print("Current device:", device)
-    print(f"Using learning rate: {learning_rate}, hidden dim: {hidden_dim}")
-
-    transform = T.Compose([
-    T.ToTensor(), 
-    lambda t: t.view(-1) 
-        ])
-    trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
-    testset = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
-
-    def filter_mnist(dataset, keep):
-        mask = torch.isin(dataset.targets, torch.tensor(keep))
-        dataset.data = dataset.data[mask]
-        dataset.targets = dataset.targets[mask]
-        return dataset
-
-    nums = list(range(0, numbers)) if 'numbers' in locals() else list(range(10))
-    latent_dim = len(nums)
-
-    if latent_dim == 3:
-        nums = [1,2,4]
-
-    trainset = filter_mnist(trainset, keep=nums)
-    testset = filter_mnist(testset, keep=nums)
-    train_loader = DataLoader(trainset, batch_size=128, shuffle=True, num_workers=0)
-    test_loader = DataLoader(testset, batch_size=128, shuffle=True, num_workers = 0)
-
-    input_dim = 28 * 28
-    
-    print(f"Training CCVAE with latent dim: {latent_dim}")
-    print(f"used numbers: {nums}")
-    print(f"epochs : {NUM_EPOCHS}")
-    model = CCVAE(input_dim=input_dim,
-                  enc_hidden_dims=hidden_dim,
-                  dec_hidden_dims=hidden_dim,
-                  latent_dim=latent_dim).to(device)
-
-    vi = VariationalInference(
-            zero_beta_epochs = 20,
-            base_beta=1.0, 
-            warmup_epochs=100,
-            max_beta=1.0,
-        ).to(device)
-    
-    test_name = f"hyperparam_test_lr_{learning_rate}_hd_{hidden_dim}"  
-    skip_load = False 
-
-    loss_data = []
-    recon_data = []
-    kl_data = []
-
-    path = f"saves/CCVAE/permutation/{test_name}"
-    performance_path = f"saves/CCVAE/permutation/{test_name}/performance"
-    plots_path = f"saves/CCVAE/permutation/{test_name}/plots"
-
-
-    if not skip_load and os.path.exists(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth"): 
-            model.load_state_dict(torch.load(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth", weights_only=True, map_location=device))
-    else:
-        if not os.path.exists(path):
-                os.makedirs(path, exist_ok=True)
-        if not os.path.exists(performance_path):
-            os.makedirs(performance_path, exist_ok=True)
-        
-        if not os.path.exists(plots_path):
-            os.makedirs(plots_path, exist_ok=True)
-
-
-        model = train_from_scratch(model, vi, train_loader, test_loader, device)
-        save_performance(f'{performance_path}/performance_e_{NUM_EPOCHS}_ld_{latent_dim}', loss_data, recon_data, kl_data)
-        make_new_vae_plots(model, loss_data, recon_data, kl_data, model(next(iter(test_loader))[0].to(device))[0], f'{performance_path}/performance_e_{NUM_EPOCHS}_ld_{latent_dim}.png') 
-        torch.save(model.state_dict(), f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth")
-
-    print("-------------")
-    print("Test Results:")
-    mean_test_loss, mean_test_recon, mean_test_kl = test_loop(model, vi, test_loader, device)
-    
-    #montecarlo_nll(model, test_loader, device, K=500)
 
 import importlib
 import plotting
@@ -714,7 +628,7 @@ importlib.reload(plots.simplex)
 from plots.simplex import plot_mnist_simplex
 
 
-def generate_plots(model: CCVAE, test_loader, single_graph=None):
+def generate_plots(model: CCVAE, test_loader, device, latent_dims, single_graph=None):
     # 0. Collect model test data
     zs = []
     ys = []
@@ -780,9 +694,99 @@ def generate_plots(model: CCVAE, test_loader, single_graph=None):
         fig, ax = plt.subplots(figsize=(8, 8))
         ax.set_aspect('equal')
         ax.axis('off')
-        plot_mnist_simplex(latent_matrix, labels, latent_dim, ax=ax)
+        plot_mnist_simplex(latent_matrix, labels, latent_dim=latent_dims, ax=ax)
         plt.tight_layout()
-        plt.savefig(f"{plots_path}/cc_{latent_dim}_simplex.svg", format="svg", bbox_inches='tight')
+        # plt.savefig(f"{plots_path}/cc_{latent_dim}_simplex.svg", format="svg", bbox_inches='tight')
+        plt.savefig(f"saves/CCVAE/permutation/testing_simplex_ld_6.svg", format="svg", bbox_inches='tight')
         #plt.show()
 
-generate_plots(model, test_loader)
+
+if __name__ == "__main__":
+
+    set_seed(42)
+
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
+
+    print("Current device:", device)
+    print(f"Using learning rate: {learning_rate}, hidden dim: {hidden_dim}")
+
+    transform = T.Compose([
+    T.ToTensor(), 
+    lambda t: t.view(-1) 
+        ])
+    trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+    testset = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
+
+    def filter_mnist(dataset, keep):
+        mask = torch.isin(dataset.targets, torch.tensor(keep))
+        dataset.data = dataset.data[mask]
+        dataset.targets = dataset.targets[mask]
+        return dataset
+
+    nums = list(range(0, numbers)) if 'numbers' in locals() else list(range(10))
+    latent_dim = len(nums)
+
+    if latent_dim == 3:
+        nums = [1,2,4]
+
+    trainset = filter_mnist(trainset, keep=nums)
+    testset = filter_mnist(testset, keep=nums)
+    train_loader = DataLoader(trainset, batch_size=128, shuffle=True, num_workers=0)
+    test_loader = DataLoader(testset, batch_size=128, shuffle=True, num_workers = 0)
+
+    input_dim = 28 * 28
+    
+    print(f"Training CCVAE with latent dim: {latent_dim}")
+    print(f"used numbers: {nums}")
+    print(f"epochs : {NUM_EPOCHS}")
+    model = CCVAE(input_dim=input_dim,
+                  enc_hidden_dims=hidden_dim,
+                  dec_hidden_dims=hidden_dim,
+                  latent_dim=latent_dim).to(device)
+
+    vi = VariationalInference(
+            zero_beta_epochs = 10,
+            base_beta=1.0, 
+            warmup_epochs=20,
+            max_beta=1.0,
+        ).to(device)
+    
+    test_name = f"hyperparam_test_lr_{learning_rate}_hd_{hidden_dim}_ld_{latent_dim}"  
+    skip_load = False 
+
+    loss_data = []
+    recon_data = []
+    kl_data = []
+
+    path = f"saves/CCVAE/permutation/{test_name}"
+    performance_path = f"saves/CCVAE/permutation/{test_name}/performance"
+    plots_path = f"saves/CCVAE/permutation/{test_name}/plots"
+
+
+    if not skip_load and os.path.exists(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth"): 
+            model.load_state_dict(torch.load(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth", weights_only=True, map_location=device))
+    else:
+        if not os.path.exists(path):
+                os.makedirs(path, exist_ok=True)
+        if not os.path.exists(performance_path):
+            os.makedirs(performance_path, exist_ok=True)
+        
+        if not os.path.exists(plots_path):
+            os.makedirs(plots_path, exist_ok=True)
+
+
+        model = train_from_scratch(model, vi, train_loader, test_loader, device)
+        save_performance(f'{performance_path}/performance_e_{NUM_EPOCHS}_ld_{latent_dim}', loss_data, recon_data, kl_data)
+        make_new_vae_plots(model, loss_data, recon_data, kl_data, model(next(iter(test_loader))[0].to(device))[0], f'{performance_path}/performance_e_{NUM_EPOCHS}_ld_{latent_dim}.png') 
+        torch.save(model.state_dict(), f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth")
+
+    print("-------------")
+    print("Test Results:")
+    mean_test_loss, mean_test_recon, mean_test_kl = test_loop(model, vi, test_loader, device)
+    
+    generate_plots(model, test_loader, device, latent_dim)
+    #montecarlo_nll(model, test_loader, device, K=500)
+

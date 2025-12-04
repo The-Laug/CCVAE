@@ -1,4 +1,5 @@
 import csv
+import glob, os
 from plotting import compare_performance_plots
 
 def save_performance(name: str, loss_data: list, recon_data: list, kl_data: list):
@@ -9,13 +10,14 @@ def save_performance(name: str, loss_data: list, recon_data: list, kl_data: list
 
 def load_performance(path: str):
     loss_data, recon_data, kl_data = [], [], []
-    with open(f'{path}/performance.csv', 'r') as f:
-        r = csv.reader(f, delimiter=';')
-        for row in r:
-            loss_data.append(float(row[0]))
-            recon_data.append(float(row[1]))
-            kl_data.append(float(row[2]))
-    
+    for file in os.listdir(f'{path}/performance'):
+        if file.endswith(".csv"):
+            with open(f'{path}/performance/{file}', 'r') as f:
+                r = csv.reader(f, delimiter=';')
+                for row in r:
+                    loss_data.append(float(row[0]))
+                    recon_data.append(float(row[1]))
+                    kl_data.append(float(row[2]))
     return loss_data, recon_data, kl_data
 
 def create_comparison(base_path, names: list[str]):
@@ -25,8 +27,8 @@ def create_comparison(base_path, names: list[str]):
         loss_data_arr.append(data[0])
         recon_data_arr.append(data[1])
         kl_data_arr.append(data[2])
-    compare_performance_plots(loss_data_arr, recon_data_arr, kl_data_arr, names, base_path)
+    compare_performance_plots(loss_data_arr, recon_data_arr, kl_data_arr, names, base_path, f'{base_path}/comparison_ld_7.png')
 
 if __name__ == "__main__":
-    base_path = 'GMVAE/saves/CCVAE'
-    create_comparison(base_path, ['c-free-5', 'c-free-10'])
+    base_path = 'saves/CCVAE/permutation'
+    create_comparison(base_path, ['hyperparam_test_lr_0.001_hd_1024_ld_7', 'hyperparam_test_lr_0.0005_hd_1024_ld_7', 'hyperparam_test_lr_0.0005_hd_512_ld_7'])

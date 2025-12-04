@@ -45,8 +45,7 @@ def plot_mnist_simplex(latent_matrix, labels,
         ax.scatter(projected[idxs, 0], projected[idxs, 1],
                    s=10, alpha=0.6, color=cmap(digit % 10), label=str(digit))
         
-
-    ax.legend(title="Digits", bbox_to_anchor=(1.05, 1), loc='upper left')
+    ax.legend(title="Digits", bbox_to_anchor=(0.5, 0.02), ncol=8, loc='upper center')
     if should_show:
         plt.tight_layout()
         plt.show()
