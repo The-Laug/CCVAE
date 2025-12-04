@@ -171,7 +171,7 @@ def sample_cc_hybrid(lam, stage1_attempts=20, stage2_attempts=7500, verbose=Fals
     # Stats: How many did Stage 1 handle?
     count_stage_1 = B - global_active_mask.sum().item()
 
-    # --- STAGE 2: Optimized Ordered Sampler ---
+    # --- STAGE 2: Ordered Sampler ---
     ordered_iters = 0
     if global_active_mask.any():
         stage2_indices = torch.nonzero(global_active_mask).squeeze(-1)
@@ -562,21 +562,13 @@ def test_loop(model: 'CCVAE', vi: VariationalInference, test_loader, device):
 
 def train_from_scratch(model: 'CCVAE',vi:VariationalInference, train_loader, test_loader, device):
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-    # --- ADD SCHEDULER HERE ---
-    # T_max should match NUM_EPOCHS. eta_min is the lowest LR it will drop to.
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, 
-        T_max=NUM_EPOCHS, 
-        eta_min=1e-5)
-    
     #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5)
     for epoch in range(0, NUM_EPOCHS+1):
         model.current_epoch = epoch
         print(f"Epoch {epoch}/{NUM_EPOCHS}:")
         print("--------")
         train_loop(model, vi, optimizer, train_loader, device)
-        scheduler.step()
+        
         
         if epoch % 5 == 0:
             test_loop(model, vi, test_loader, device) 
