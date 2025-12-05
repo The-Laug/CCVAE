@@ -247,7 +247,7 @@ class MLPEncoder(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-class BernoulliDecoder(nn.Module):
+class Decoder(nn.Module):
     def __init__(self, latent_dim, hidden_dims, output_dim):
         super().__init__()
         self.net = nn.Sequential(
@@ -271,7 +271,7 @@ class CCVAE(nn.Module):
         if self.latent_dim >=limit:
             self.logits_bn = nn.BatchNorm1d(latent_dim)
         self.encoder = MLPEncoder(input_dim, enc_hidden_dims, latent_dim)
-        self.decoder = BernoulliDecoder(latent_dim, dec_hidden_dims, input_dim)
+        self.decoder = Decoder(latent_dim, dec_hidden_dims, input_dim)
 
         # Set explore_epochs higher for a slower T annealing schedule
         self.explore_epochs = 100 

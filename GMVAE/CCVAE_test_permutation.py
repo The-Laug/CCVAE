@@ -338,7 +338,7 @@ class MLPEncoder(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-class BernoulliDecoder(nn.Module):
+class Decoder(nn.Module):
     def __init__(self, latent_dim, hidden_dims, output_dim):
         super().__init__()
         self.net = nn.Sequential(
@@ -354,7 +354,7 @@ class CCVAE(nn.Module):
     def __init__(self, input_dim, enc_hidden_dims, dec_hidden_dims, latent_dim):
         super().__init__()
         self.encoder = MLPEncoder(input_dim, enc_hidden_dims, latent_dim)
-        self.decoder = BernoulliDecoder(latent_dim, dec_hidden_dims, input_dim)
+        self.decoder = Decoder(latent_dim, dec_hidden_dims, input_dim)
         self.explore_epochs = 100 
         self.current_epoch = 1
         self.latent_dim = latent_dim
