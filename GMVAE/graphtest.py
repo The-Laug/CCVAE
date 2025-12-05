@@ -79,7 +79,7 @@ if __name__ == "__main__":
     plots_path = f"saves/CCVAE/permutation/{test_name}/plots"
 
     if os.path.exists(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth"): 
-        print("letsgo")
+
         model.load_state_dict(torch.load(f"{path}/CCVAE_model_e_{NUM_EPOCHS}_ld_{latent_dim}.pth", weights_only=True, map_location=device))
         generate_plots(model, test_loader, device, latent_dim, single_graph='Simplex')
     else:

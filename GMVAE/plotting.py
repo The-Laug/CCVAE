@@ -257,6 +257,7 @@ def compare_performance_plots(loss_data_arr, recon_data_arr, kl_data_arr, names,
     ax.set_title(r'Negative ELBO')
     for loss_data, name in zip(loss_data_arr, names):
         ax.plot(loss_data, label=name)
+    # ax.set_yscale('log')
     box = ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.1,
                     box.width, box.height * 0.9])
@@ -264,7 +265,8 @@ def compare_performance_plots(loss_data_arr, recon_data_arr, kl_data_arr, names,
     ax = axes[0, 1]
     ax.set_title(r'Reconstruction Loss')
     for recon_data, name in zip(recon_data_arr, names):
-        ax.plot(recon_data, label=name)
+        ax.plot(recon_data, label=name.strip("hyperparam_test"))
+    # ax.set_yscale('log')
     box = ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.1,
                     box.width, box.height * 0.9])
@@ -275,6 +277,7 @@ def compare_performance_plots(loss_data_arr, recon_data_arr, kl_data_arr, names,
     ax.set_title(r'KI')
     for kl_data, name in zip(kl_data_arr, names):
         ax.plot(kl_data, label=name)
+    # ax.set_yscale('log')
     box = ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.1,
                     box.width, box.height * 0.9])

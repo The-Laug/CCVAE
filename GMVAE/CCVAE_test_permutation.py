@@ -21,17 +21,11 @@ import random
 # --- CONSOLIDATED EPSILON ---
 limit = 10
 EPS = 1e-6
-<<<<<<< HEAD
-NUM_EPOCHS = 50
-learning_rate = 5e-4
-hidden_dim = 1024
-=======
 NUM_EPOCHS = 400
 learning_rate = 5e-4
 hidden_dim = 500
 total_iterations = 0
 total_attempts = 50000
->>>>>>> 0235902fc70a56c82de2ce708d8e6baf9fde1ec7
 
 if len(sys.argv) > 1:
     learning_rate = float(sys.argv[1])
@@ -726,15 +720,9 @@ if __name__ == "__main__":
                   latent_dim=latent_dim).to(device)
 
     vi = VariationalInference(
-<<<<<<< HEAD
-            zero_beta_epochs = 10,
-            base_beta=1.0, 
-            warmup_epochs=20,
-=======
             zero_beta_epochs = 100,
             base_beta=1.0, 
             warmup_epochs=150,
->>>>>>> 0235902fc70a56c82de2ce708d8e6baf9fde1ec7
             max_beta=1.0,
         ).to(device)
     

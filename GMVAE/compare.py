@@ -31,4 +31,4 @@ def create_comparison(base_path, names: list[str]):
 
 if __name__ == "__main__":
     base_path = 'saves/CCVAE/permutation'
-    create_comparison(base_path, ['hyperparam_test_lr_0.001_hd_1024_ld_7', 'hyperparam_test_lr_0.0005_hd_1024_ld_7', 'hyperparam_test_lr_0.0005_hd_512_ld_7'])
+    create_comparison(base_path, ['hyperparam_test_lr_0.001_hd_512_ld_7', 'hyperparam_test_lr_0.001_hd_1024_ld_7', 'hyperparam_test_lr_0.0005_hd_1024_ld_7', 'hyperparam_test_lr_0.0005_hd_512_ld_7'])
