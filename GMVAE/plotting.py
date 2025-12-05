@@ -108,8 +108,6 @@ def plot_samples(ax, x):
     ax.axis('off')
 
 
-
-
 def plot_interpolations(ax, vae):
     device = next(iter(vae.parameters())).device
     nrow = 10

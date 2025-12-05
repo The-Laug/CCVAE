@@ -27,8 +27,10 @@ def create_comparison(base_path, names: list[str]):
         loss_data_arr.append(data[0])
         recon_data_arr.append(data[1])
         kl_data_arr.append(data[2])
-    compare_performance_plots(loss_data_arr, recon_data_arr, kl_data_arr, names, base_path, f'{base_path}/comparison_ld_7.png')
+    compare_performance_plots(loss_data_arr, recon_data_arr, kl_data_arr, names, base_path, f'{base_path}/comparison_ld_6.png')
 
 if __name__ == "__main__":
     base_path = 'saves/CCVAE/permutation'
-    create_comparison(base_path, ['hyperparam_test_lr_0.001_hd_512_ld_7', 'hyperparam_test_lr_0.001_hd_1024_ld_7', 'hyperparam_test_lr_0.0005_hd_1024_ld_7', 'hyperparam_test_lr_0.0005_hd_512_ld_7'])
+    # create_comparison(base_path, ['hyperparam_test_lr_0.001_hd_512_ld_7', 'hyperparam_test_lr_0.001_hd_1024_ld_7', 'hyperparam_test_lr_0.0005_hd_1024_ld_7', 'hyperparam_test_lr_0.0005_hd_512_ld_7'])
+    create_comparison(base_path, ['hyperparam_test_lr_0.001_hd_512_ld_6', 'hyperparam_test_lr_0.001_hd_1024_ld_6', 'hyperparam_test_lr_0.0005_hd_1024_ld_6', 'hyperparam_test_lr_0.0005_hd_512_ld_6'])
+    # create_comparison(base_path, ['hyperparam_test_lr_0.001_hd_512_ld_7', 'hyperparam_test_lr_0.001_hd_1024_ld_7'])

@@ -19,11 +19,10 @@ from compare import save_performance
 import random
 
 # --- CONSOLIDATED EPSILON ---
-limit = 10
 EPS = 1e-6 
 NUM_EPOCHS = 50
 learning_rate = 5e-4
-hidden_dim = 500
+hidden_dim = 512
 #take learning rate and hidden dim from command line input
 
 if len(sys.argv) > 1:
@@ -268,8 +267,6 @@ class CCVAE(nn.Module):
         super().__init__()
         
         self.latent_dim = latent_dim
-        if self.latent_dim >=limit:
-            self.logits_bn = nn.BatchNorm1d(latent_dim)
         self.encoder = MLPEncoder(input_dim, enc_hidden_dims, latent_dim)
         self.decoder = BernoulliDecoder(latent_dim, dec_hidden_dims, input_dim)
 
@@ -283,11 +280,6 @@ class CCVAE(nn.Module):
         tau = np.maximum(0.5, 1.0 * np.exp(annealing_rate * self.current_epoch))
 
         lam_logits = self.encoder(x) # lam is the mean parameter [B, K]
-
-        if self.latent_dim>=limit:
-            #"Using batchnorm on logits to prevent posterior collapse...
-            lam_logits = self.logits_bn(lam_logits)
-
         lam = F.softmax(lam_logits/tau, dim=1)
 
         # Directly use the reparameterized sampler
@@ -616,12 +608,12 @@ if __name__ == "__main__":
 
     vi = VariationalInference(
             zero_beta_epochs = 10,
-            base_beta=0.75, 
+            base_beta=1.0, 
             warmup_epochs=20,
             max_beta=1.0,
         ).to(device)
     
-    test_name = f"hyperparam_test_lr_{learning_rate}_hd_{hidden_dim}"  # Set to None to train from scratch without loading/saving
+    test_name = f"hyperparam_test_ordered_lr_{learning_rate}_hd_{hidden_dim}_ld_{latent_dim}"  # Set to None to train from scratch without loading/saving
     skip_load = False # if true, do not load a model
 
     loss_data = []
