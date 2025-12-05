@@ -1,0 +1,174 @@
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Current device: cuda
+Using learning rate: 0.0001, hidden dim: 512
+Training CCVAE with latent dim: 9
+used numbers: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+epochs : 50
+Epoch 0/50:
+--------
+Negative ELBO: 398.9700 | Recon Loss: 398.9700 | KL: 64.1431
+Negative ELBO: 282.6508 | Recon Loss: 282.6508 | KL: 38.4929
+Epoch 1/50:
+--------
+Negative ELBO: 238.7591 | Recon Loss: 238.7591 | KL: 32.3228
+Epoch 2/50:
+--------
+Negative ELBO: 209.3801 | Recon Loss: 209.3801 | KL: 29.8700
+Epoch 3/50:
+--------
+Negative ELBO: 203.0732 | Recon Loss: 203.0732 | KL: 32.4978
+Epoch 4/50:
+--------
+Negative ELBO: 200.0280 | Recon Loss: 200.0280 | KL: 36.4747
+Epoch 5/50:
+--------
+Negative ELBO: 196.8347 | Recon Loss: 196.8347 | KL: 36.6496
+Negative ELBO: 195.5001 | Recon Loss: 195.5001 | KL: 36.7181
+Epoch 6/50:
+--------
+Negative ELBO: 195.2619 | Recon Loss: 195.2619 | KL: 37.0625
+Epoch 7/50:
+--------
+Negative ELBO: 193.9357 | Recon Loss: 193.9357 | KL: 37.7508
+Epoch 8/50:
+--------
+Negative ELBO: 191.9891 | Recon Loss: 191.9891 | KL: 34.6745
+Epoch 9/50:
+--------
+Negative ELBO: 191.1581 | Recon Loss: 191.1581 | KL: 33.8832
+Epoch 10/50:
+--------
+Negative ELBO: 190.7254 | Recon Loss: 190.7254 | KL: 33.4568
+Negative ELBO: 190.0502 | Recon Loss: 190.0502 | KL: 33.2218
+Epoch 11/50:
+--------
+Negative ELBO: 190.4992 | Recon Loss: 190.4992 | KL: 33.5043
+Epoch 12/50:
+--------
+Negative ELBO: 190.4130 | Recon Loss: 190.4130 | KL: 33.4648
+Epoch 13/50:
+--------
+Negative ELBO: 190.3064 | Recon Loss: 190.3064 | KL: 33.8516
+Epoch 14/50:
+--------
+Negative ELBO: 189.8242 | Recon Loss: 189.8242 | KL: 33.5030
+Epoch 15/50:
+--------
+Negative ELBO: 188.8788 | Recon Loss: 188.8788 | KL: 33.0238
+Negative ELBO: 187.8352 | Recon Loss: 187.8352 | KL: 32.8990
+Epoch 16/50:
+--------
+Negative ELBO: 187.9873 | Recon Loss: 187.9873 | KL: 32.7724
+Epoch 17/50:
+--------
+Negative ELBO: 187.6287 | Recon Loss: 187.6287 | KL: 32.5508
+Epoch 18/50:
+--------
+Negative ELBO: 187.4128 | Recon Loss: 187.4128 | KL: 32.2264
+Epoch 19/50:
+--------
+Negative ELBO: 187.4406 | Recon Loss: 187.4406 | KL: 32.1552
+Epoch 20/50:
+--------
+Negative ELBO: 187.3309 | Recon Loss: 187.3309 | KL: 32.0300
+Negative ELBO: 186.5681 | Recon Loss: 186.5681 | KL: 32.1822
+Epoch 21/50:
+--------
+Negative ELBO: 187.3356 | Recon Loss: 187.2559 | KL: 31.8668
+Epoch 22/50:
+--------
+Negative ELBO: 187.4112 | Recon Loss: 187.2526 | KL: 31.7352
+Epoch 23/50:
+--------
+Negative ELBO: 187.5291 | Recon Loss: 187.2915 | KL: 31.6797
+Epoch 24/50:
+--------
+Negative ELBO: 187.4585 | Recon Loss: 187.1427 | KL: 31.5799
+Epoch 25/50:
+--------
+Negative ELBO: 187.5647 | Recon Loss: 187.1703 | KL: 31.5561
+Negative ELBO: 186.8226 | Recon Loss: 186.4293 | KL: 31.4613
+Epoch 26/50:
+--------
+Negative ELBO: 187.5877 | Recon Loss: 187.1154 | KL: 31.4806
+Epoch 27/50:
+--------
+Negative ELBO: 187.5606 | Recon Loss: 187.0107 | KL: 31.4218
+Epoch 28/50:
+--------
+Negative ELBO: 187.7564 | Recon Loss: 187.1294 | KL: 31.3485
+Epoch 29/50:
+--------
+Negative ELBO: 187.8786 | Recon Loss: 187.1746 | KL: 31.2921
+Epoch 30/50:
+--------
+Negative ELBO: 187.9012 | Recon Loss: 187.1196 | KL: 31.2618
+Negative ELBO: 187.2199 | Recon Loss: 186.4357 | KL: 31.3692
+Epoch 31/50:
+--------
+Negative ELBO: 187.8227 | Recon Loss: 186.9632 | KL: 31.2571
+Epoch 32/50:
+--------
+Negative ELBO: 187.9120 | Recon Loss: 186.9758 | KL: 31.2052
+Epoch 33/50:
+--------
+Negative ELBO: 188.0364 | Recon Loss: 187.0238 | KL: 31.1565
+Epoch 34/50:
+--------
+Negative ELBO: 188.0413 | Recon Loss: 186.9507 | KL: 31.1586
+Epoch 35/50:
+--------
+Negative ELBO: 188.1025 | Recon Loss: 186.9356 | KL: 31.1197
+Negative ELBO: 187.6076 | Recon Loss: 186.4379 | KL: 31.1915
+Epoch 36/50:
+--------
+Negative ELBO: 188.1571 | Recon Loss: 186.9128 | KL: 31.1060
+Epoch 37/50:
+--------
+Negative ELBO: 188.2954 | Recon Loss: 186.9739 | KL: 31.0958
+Epoch 38/50:
+--------
+Negative ELBO: 188.2618 | Recon Loss: 186.8633 | KL: 31.0779
+Epoch 39/50:
+--------
+Negative ELBO: 188.3325 | Recon Loss: 186.8608 | KL: 30.9825
+Epoch 40/50:
+--------
+Negative ELBO: 188.3574 | Recon Loss: 186.8078 | KL: 30.9930
+Negative ELBO: 187.8397 | Recon Loss: 186.2832 | KL: 31.1312
+Epoch 41/50:
+--------
+Negative ELBO: 188.5163 | Recon Loss: 186.8925 | KL: 30.9294
+Epoch 42/50:
+--------
+Negative ELBO: 188.5254 | Recon Loss: 186.8216 | KL: 30.9784
+Epoch 43/50:
+--------
+Negative ELBO: 188.5918 | Recon Loss: 186.8103 | KL: 30.9827
+Epoch 44/50:
+--------
+Negative ELBO: 188.7278 | Recon Loss: 186.8685 | KL: 30.9877
+Epoch 45/50:
+--------
+Negative ELBO: 188.7444 | Recon Loss: 186.8084 | KL: 30.9757
+Negative ELBO: 188.2369 | Recon Loss: 186.3011 | KL: 30.9723
+Epoch 46/50:
+--------
+Negative ELBO: 188.8779 | Recon Loss: 186.8697 | KL: 30.8961
+Epoch 47/50:
+--------
+Negative ELBO: 188.9506 | Recon Loss: 186.8654 | KL: 30.8921
+Epoch 48/50:
+--------
+Negative ELBO: 188.8949 | Recon Loss: 186.7348 | KL: 30.8579
+Epoch 49/50:
+--------
+Negative ELBO: 189.0376 | Recon Loss: 186.8058 | KL: 30.7836
+<IPython.core.display.Image object>
+[2K
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+[2K
+-------------
+Test Results:
+Negative ELBO: 188.4686 | Recon Loss: 186.2382 | KL: 30.7648
+Estimated NLL (Monte Carlo, K=500): 204.8755

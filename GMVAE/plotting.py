@@ -108,8 +108,6 @@ def plot_samples(ax, x):
     ax.axis('off')
 
 
-
-
 def plot_interpolations(ax, vae):
     device = next(iter(vae.parameters())).device
     nrow = 10
@@ -250,24 +248,38 @@ def make_new_vae_plots(vae, loss_data, recon_data, kl_data, x, save_name=None, o
         os.remove(tmp_img)
 
 
-def compare_performance_plots(loss_data_arr, recon_data_arr, kl_data_arr, names, base_path):
+def compare_performance_plots(loss_data_arr, recon_data_arr, kl_data_arr, names, base_path, out_name):
     fig, axes = plt.subplots(1, 3, figsize=(12, 4), squeeze=False)
-    axes[0, 0].set_title(r'Negative ELBO')
+
+    ax = axes[0, 0]
+    ax.set_title(r'Negative ELBO')
     for loss_data, name in zip(loss_data_arr, names):
-        axes[0, 0].plot(loss_data, label=name)
-    axes[0, 0].legend()
-
-    axes[0, 1].set_title(r'Reconstruction Loss')
+        ax.plot(loss_data, label=name)
+    # ax.set_yscale('log')
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+    
+    ax = axes[0, 1]
+    ax.set_title(r'Reconstruction Loss')
     for recon_data, name in zip(recon_data_arr, names):
-        axes[0, 1].plot(recon_data, label=name)
-    axes[0, 1].legend()
+        ax.plot(recon_data, label=name.strip("hyperparam_test"))
+    # ax.set_yscale('log')
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.07),
+          fancybox=True, ncol=5)
 
-    axes[0, 2].set_title(r'KI')
+    ax = axes[0, 2]
+    ax.set_title(r'KI')
     for kl_data, name in zip(kl_data_arr, names):
-        axes[0, 2].plot(kl_data, label=name)
-    axes[0, 2].legend()
-
-    plt.savefig(f"{base_path}/comparison.png")
+        ax.plot(kl_data, label=name)
+    # ax.set_yscale('log')
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+    plt.savefig(out_name)
     plt.show()
 
 def make_vae_plots(vae, x, y, outputs, training_data, validation_data, tmp_img="tmp_vae_out.png", figsize=(18, 18)):
@@ -366,7 +378,7 @@ def plot_mds(ax, z, y, latent_features):
     z = MDS(
         n_components=latent_features,
         max_iter=3000,
-
+        normalized_stress='auto'
     ).fit_transform(z)
 
     ax.scatter(z[:, 0], z[:, 1], color=colors)
