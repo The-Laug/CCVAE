@@ -6,7 +6,7 @@ import torchvision.transforms as T
 import csv
 import os
 
-from CCVAE_script import CCVAE, VariationalInference, train_loop, test_loop  
+from CCVAE_test_ordered import CCVAE, VariationalInference, train_loop, test_loop  
 
 
 # ===================================================
