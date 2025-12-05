@@ -1,0 +1,2 @@
+Our main findings are reconstructed in the notebook explainer_notebook
+Other scripts can be found in the model folder, where you can also find some scripts for hyperparameter sweeps, saves from previous trials, logs from old jobs and a bunch of plots from previous trials
